@@ -3,7 +3,7 @@
 PortSystem              1.0
 
 name                    pure-devel
-version                 0.1.0.r34
+version                 0.2.0.r54
 categories              lang
 platforms               darwin
 maintainers             ryandesign
@@ -45,7 +45,12 @@ depends_lib \
     port:readline
 
 patchfiles \
-    patch-util.cc.diff
+    patch-Makefile-mandir.diff
+
+platform darwin {
+    patchfiles-append \
+        patch-Makefile-nostrip.diff
+}
 
 build.args \
     prefix=${prefix} \
