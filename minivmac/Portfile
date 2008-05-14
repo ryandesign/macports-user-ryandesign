@@ -3,16 +3,12 @@
 PortSystem          1.0
 
 name                minivmac
-version             2.8.2
-revision            1
+version             3.0.4
 categories          emulators aqua
 maintainers         ryandesign
 homepage            http://minivmac.sourceforge.net/
-master_sites        sourceforge
-use_configure       no
-worksrcdir          projects/bgcmachs
-build.target
-platforms           darwin
+use_zip             yes
+platforms           macosx
 universal_variant   no
 
 description \
@@ -24,39 +20,57 @@ long_description \
 	The default is to emulate a Mac Plus (1986-1990)\; this is also \
 	the best-tested and therefore recommended emulation.
 
+master_sites \
+	sourceforge:${name}:minivmac \
+	http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-International/Macintosh/System/Full_Installs/:apple
+
+set my_src                                  ${distname}.src
+set my_src_compressed                       ${my_src}.zip
+set my_bootstrap_version                    3.0.4
+set my_bootstrap                            "Mini vMac.app"
+set my_bootstrap_compressed                 ${name}-${my_bootstrap_version}-umch.bin.tgz
+set my_autoquit_compressed                  autquit7-1.1.0.zip
+set my_system_disk_container                Z-System_7.0.1.smi
+set my_system_disk_container_compressed     ${my_system_disk_container}.bin
+
 distfiles \
-	${distname}.prj.tgz \
-	${distname}.src.tgz
+	${my_src_compressed}:minivmac \
+	${my_autoquit_compressed}:minivmac \
+	${my_system_disk_container_compressed}:apple
+
+extract.only \
+	${my_src_compressed} \
+	${my_autoquit_compressed}
 
 checksums \
-	${distname}.prj.tgz \
-		md5 cfd3c6b60080d2184d6895b84c616fbf \
-		sha1 8aa54b5708e280d1ed0c1f68aca8a38965cad4e2 \
-		rmd160 d0e8d7734109b12caaf909efea231fe2a3a55979 \
-	${distname}.src.tgz \
-		md5 ff6e67f654f09098ffbb8f26a5a7ae20 \
-		sha1 6cdc4b514f3b45869a9fd2c5ee528499e772ad5e \
-		rmd160 dc7a827fc1821014b2ac0f9b5cd025e1133d83ef
+	${my_src_compressed} \
+		md5 ab308459e98bd5103ad8bbb7dd158eb6 \
+		sha1 ff99aa72da0868a5306631f0d06ae190cbd2a03a \
+		rmd160 b8f1f5269d21835ff3e9e428da12a7b6c224e60e \
+	${my_bootstrap_compressed} \
+		md5 298565ec1ccfe6876768156aaf5f76a0 \
+		sha1 34212dedb1cfb744e6ca8124693f2f6e40094833 \
+		rmd160 042eacfb9ec853589d661c86ffb99d509061eb0f \
+	${my_autoquit_compressed} \
+		md5 eebe87a27d6db8e8f247f0fffe0f2bd5 \
+		sha1 8199e1da12d01fc210ae1eaa50f794e5b8c479c1 \
+		rmd160 f493a59fd637caa8a7937fbefaf6ebdf4a07c7f5 \
+	${my_system_disk_container_compressed} \
+		md5 5e7b4c0ce13e65546eb795c35879751a \
+		sha1 bf37fde76dfd9d4ed35526954c149566d761c2a6 \
+		rmd160 08788cbcca023ea9a0713ecec4781c35aa5a9185
 
-set appdir /Applications/MacPorts
+depends_build \
+	port:macutil \
+	bin:expect:expect
+
+set my_appdir "/Applications/MacPorts/Mini vMac"
 set romfile vMac.ROM
 set romfile_model "Macintosh Plus or 512Ke"
+set my_mnvm_dat "${workpath}/${my_bootstrap}/Contents/mnvm_dat"
 
-post-extract {
-	reinplace "s|maintained by unknown|maintained by MacPorts|" \
-		${worksrcpath}/config/Info.plist
-	reinplace "s|#define kMaintainerName \"unknown\"|#define kMaintainerName \"MacPorts\"|" \
-		${worksrcpath}/config/CNFGGLOB.h
-}
-
-destroot {
-	xinstall -m 755 -d ${destroot}${appdir}
-	file copy ${worksrcpath}/minivmac.app \
-		${destroot}${appdir}/Mini\ vMac.app
-}
-
-post-install {
-	if { ! [file exists ${appdir}/${romfile}] } {
+pre-fetch {
+	if { ! [file exists ${my_appdir}/${romfile}] } {
 		ui_msg "**************************************************************"
 		ui_msg "Mini vMac requires a ROM file from the type of machine you're"
 		ui_msg "emulating in order to work. The ROM file is not included with"
@@ -66,9 +80,50 @@ post-install {
 		ui_msg "and transfer it to a real physical ${romfile_model}"
 		ui_msg "that you own. Run the CopyRoms program there, then transfer"
 		ui_msg "the ROM file back to this Mac, name it ${romfile},"
-		ui_msg "and put it in ${appdir}."
+		ui_msg "and put it in ${my_appdir}."
 		ui_msg "**************************************************************"
+		return -code error "missing ROM file"
 	}
+}
+
+post-extract {
+	system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_compressed}"
+	
+	xinstall -W ${filespath} attach.exp demacbinary.sh ${workpath}
+	
+	system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_compressed} ${workpath}"
+	
+	file mkdir ${my_mnvm_dat}
+	file copy ${my_appdir}/${romfile} ${my_mnvm_dat}
+	
+	# Copy the disk tools image from the container image.
+	set my_system_disk_container_mount [attach_disk_image ${workpath}/${my_system_disk_container} 0]
+	file copy "${my_system_disk_container_mount}/Disk Tools.image" ${workpath}/startup.img
+	detach_disk_image ${my_system_disk_container_mount}
+	
+	# The disk image mounter likes images to have the .img extension.
+	file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/src.img
+	
+	# Make room on the startup disk for our things.
+	set my_startup_disk_mount [attach_disk_image ${workpath}/startup.img 1]
+	file delete "${my_startup_disk_mount}/Apple HD SC Setup" "${my_startup_disk_mount}/Disk First Aid"
+	detach_disk_image ${my_startup_disk_mount}
+	
+	# Mini vMac looks for disks named disk1.dsk through disk3.dsk and automounts them.
+	file rename "${workpath}/startup.img" "${my_mnvm_dat}/disk1.dsk"
+	file rename "${workpath}/src.img" "${my_mnvm_dat}/disk2.dsk"
+	
+#	system "osascript -e 'tell app \"Finder\" to make new alias file at desktop to theFile'"
+	
+#	reinplace "s|maintained by unknown|maintained by MacPorts|" \
+#		${worksrcpath}/config/Info.plist
+#	reinplace "s|#define kMaintainerName \"unknown\"|#define kMaintainerName \"MacPorts\"|" \
+#		${worksrcpath}/config/CNFGGLOB.h
+}
+
+configure {
+	system "'${workpath}/${my_bootstrap}/Contents/MacOS/minivmac'"
+	return -code error "portfile incomplete! :("
 }
 
 if { ![variant_isset mac128k] && ![variant_isset mac512k] && ![variant_isset mac512ke] && ![variant_isset macse] } {
@@ -99,6 +154,20 @@ variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a 
 	patchfiles-append patch-CNFGGLOB.h-macse.diff
 	set romfile MacSE.ROM
 	set romfile_model "Macintosh SE"
+}
+
+proc attach_disk_image {disk_image allow_writing} {
+	global name workpath
+	set mountpoint [exec mktemp -d -q -t ${name}]
+	# Use this expect script instead of using hdiutil directly, because the
+	# system disk image has a license agreement we must agree to.
+	system "${workpath}/attach.exp '${disk_image}' '${mountpoint}' '${allow_writing}'"
+	return ${mountpoint}
+}
+
+proc detach_disk_image {mountpoint} {
+	system "hdiutil detach ${mountpoint}"
+	file delete -force ${mountpoint}
 }
 
 livecheck.check     regex
