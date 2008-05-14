@@ -29,7 +29,8 @@ set my_src_compressed                       ${my_src}.zip
 set my_bootstrap_version                    3.0.4
 set my_bootstrap                            "Mini vMac.app"
 set my_bootstrap_compressed                 ${name}-${my_bootstrap_version}-umch.bin.tgz
-set my_autoquit_compressed                  autquit7-1.1.0.zip
+set my_autoquit                             autquit7-1.1.0
+set my_autoquit_compressed                  ${my_autoquit}.zip
 set my_system_disk_container                Z-System_7.0.1.smi
 set my_system_disk_container_compressed     ${my_system_disk_container}.bin
 
@@ -103,11 +104,24 @@ post-extract {
 	
 	# The disk image mounter likes images to have the .img extension.
 	file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/src.img
+	file rename ${workpath}/${my_autoquit}/${my_autoquit}.dsk ${workpath}/autoquit.img
+	
+	# Mount disk images.
+	set my_autoquit_disk_mount [attach_disk_image ${workpath}/autoquit.img 0]
+	set my_startup_disk_mount [attach_disk_image ${workpath}/startup.img 1]
 	
 	# Make room on the startup disk for our things.
-	set my_startup_disk_mount [attach_disk_image ${workpath}/startup.img 1]
 	file delete "${my_startup_disk_mount}/Apple HD SC Setup" "${my_startup_disk_mount}/Disk First Aid"
+	
+	# Set up autoquit.
+	set my_startup_disk_autoquit_dir "${my_startup_disk_mount}/autoquit"
+	file mkdir "${my_startup_disk_autoquit_dir}"
+	# Need to copy this with the resource fork.
+	system "ditto --rsrc ${my_autoquit_disk_mount}/AutQuit7 ${my_startup_disk_autoquit_dir}"
+	
+	# Unmount disk images.
 	detach_disk_image ${my_startup_disk_mount}
+	detach_disk_image ${my_autoquit_disk_mount}
 	
 	# Mini vMac looks for disks named disk1.dsk through disk3.dsk and automounts them.
 	file rename "${workpath}/startup.img" "${my_mnvm_dat}/disk1.dsk"
