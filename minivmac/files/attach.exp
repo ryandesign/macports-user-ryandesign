@@ -6,7 +6,7 @@ if {[lindex $argv 2]} {
 	set flag "-readonly"
 }
 
-spawn hdiutil attach "[lindex $argv 0]" -mountpoint "[lindex $argv 1]" -private -nobrowse -noautoopen -noautofsck $flag
+spawn hdiutil attach "[lindex $argv 0]" -mountpoint "[lindex $argv 1]" -private -nobrowse -noautoopen -noautofsck -ignorebadchecksums $flag
 
 expect {
 	"Software License" {

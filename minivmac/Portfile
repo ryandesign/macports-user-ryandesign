@@ -195,7 +195,7 @@ proc my_make_alias {src dst} {
 	} else {
 		set dst_dir "[file dirname ${dst}]"
 	}
-	system "osascript -e 'set src to POSIX file \"${src}\"' -e 'set dst_dir to POSIX file \"${dst_dir}\"' -e 'tell app \"Finder\" to make new alias file at dst_dir to src'"
+	system "osascript -e 'set src to POSIX file \"${src}\"' -e 'set dst_dir to POSIX file \"${dst_dir}\"' -e 'tell app \"Finder\" to make new alias file at dst_dir to src' -e 'return'"
 	if {!${dst_is_dir}} {
 		file rename "[file join ${dst_dir} [file tail ${src}]]" "${dst}"
 	}
