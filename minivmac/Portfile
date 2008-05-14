@@ -129,8 +129,6 @@ post-extract {
 	file rename "${workpath}/startup.img" "${my_mnvm_dat}/disk1.dsk"
 	file rename "${workpath}/src.img" "${my_mnvm_dat}/disk2.dsk"
 	
-#	system "osascript -e 'tell app \"Finder\" to make new alias file at desktop to theFile'"
-	
 #	reinplace "s|maintained by unknown|maintained by MacPorts|" \
 #		${worksrcpath}/config/Info.plist
 #	reinplace "s|#define kMaintainerName \"unknown\"|#define kMaintainerName \"MacPorts\"|" \
