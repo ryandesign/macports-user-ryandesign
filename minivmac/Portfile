@@ -188,6 +188,7 @@ configure {
 	set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 1]
 	if {[file exists ${my_src_disk_mount}/output/${my_variation}]} {
 		file copy ${my_src_disk_mount}/output/${my_variation} ${workpath}
+		file delete -force ${my_src_disk_mount}/output/${my_variation}
 	}
 	my_detach_disk_image ${my_src_disk_mount}
 }
