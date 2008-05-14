@@ -118,6 +118,8 @@ post-extract {
 	file mkdir "${my_startup_disk_autoquit_dir}"
 	# Need to copy this with the resource fork.
 	system "ditto --rsrc ${my_autoquit_disk_mount}/AutQuit7 ${my_startup_disk_autoquit_dir}"
+	# Launch autoquit at startup.
+	make_alias "${my_startup_disk_autoquit_dir}/AutQuit7" "${my_startup_disk_mount}/System Folder/Startup Items"
 	
 	# Unmount disk images.
 	detach_disk_image ${my_startup_disk_mount}
@@ -182,6 +184,10 @@ proc attach_disk_image {disk_image allow_writing} {
 proc detach_disk_image {mountpoint} {
 	system "hdiutil detach ${mountpoint}"
 	file delete -force ${mountpoint}
+}
+
+proc make_alias {src dst} {
+	system "osascript -e 'set my_src to POSIX file \"${src}\"' -e 'set my_dst to POSIX file \"${dst}\"' -e 'tell app \"Finder\" to make new alias file at my_dst to my_src'"
 }
 
 livecheck.check     regex
