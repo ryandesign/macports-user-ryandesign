@@ -180,7 +180,7 @@ proc my_attach_disk_image {disk_image allow_writing} {
 }
 
 proc my_detach_disk_image {mountpoint} {
-	system "hdiutil detach ${mountpoint}"
+	system "hdiutil detach ${mountpoint} -force"
 	file delete -force ${mountpoint}
 }
 
