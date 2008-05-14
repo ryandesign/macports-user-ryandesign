@@ -10,6 +10,7 @@ homepage            http://minivmac.sourceforge.net/
 use_zip             yes
 platforms           macosx
 universal_variant   no
+build.target
 
 description \
 	a Mac 128K, Mac 512K, Mac 512KE, Mac Plus and Mac SE emulator
@@ -70,9 +71,10 @@ set romfile vMac.ROM
 set romfile_model "Macintosh Plus or 512Ke"
 set my_mnvm_dat "${workpath}/${my_bootstrap}/Contents/mnvm_dat"
 set my_options_file options.txt
-set my_base_options "-maintainer MacPorts -homepage http://www.macports.org/ -nex"
+set my_base_options "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
 set my_target ""
 set my_machine Plus
+set my_variation_machine mac[string tolower ${my_machine}]
 
 platform powerpc {
 	set my_target mach
@@ -167,7 +169,7 @@ post-extract {
 
 configure {
 	# Write our options file.
-	set my_variation ${name}-${version}_${revision}-${my_machine}
+	set my_variation [my_get_variation]
 	set my_options "${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}"
 	set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 1]
 	set my_options_file_id [open ${my_src_disk_mount}/${my_options_file} "w"]
@@ -193,8 +195,16 @@ configure {
 	my_detach_disk_image ${my_src_disk_mount}
 }
 
-build {
-	return -code error "portfile incomplete! :("
+pre-build {
+	set my_variation [my_get_variation]
+	build.dir ${workpath}/${my_variation}
+}
+
+destroot {
+	set my_variation [my_get_variation]
+	xinstall -d ${destroot}${my_appdir}
+	file copy ${workpath}/${my_variation}/minivmac.app \
+		${destroot}${my_appdir}/Mini\ vMac\ ${my_machine}.app
 }
 
 if { ![variant_isset mac128k] && ![variant_isset mac512k] && ![variant_isset mac512ke] && ![variant_isset macse] } {
@@ -252,6 +262,11 @@ proc my_make_alias {src dst} {
 	if {!${dst_is_dir}} {
 		file rename "[file join ${dst_dir} [file tail ${src}]]" "${dst}"
 	}
+}
+
+proc my_get_variation {} {
+	global name version revision my_variation_machine my_target
+	return ${name}-${version}_${revision}-${my_variation_machine}-${my_target}
 }
 
 livecheck.check     regex
