@@ -108,6 +108,7 @@ post-extract {
 	
 	# Mount disk images.
 	set my_autoquit_disk_mount [my_attach_disk_image ${workpath}/autoquit.img 0]
+	set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 0]
 	set my_startup_disk_mount [my_attach_disk_image ${workpath}/startup.img 1]
 	
 	# Make room on the startup disk for our things.
@@ -120,9 +121,12 @@ post-extract {
 	system "ditto --rsrc ${my_autoquit_disk_mount}/AutQuit7 ${my_startup_disk_autoquit_dir}"
 	# Launch autoquit at startup.
 	my_make_alias "${my_startup_disk_autoquit_dir}/AutQuit7" "${my_startup_disk_mount}/System Folder/Startup Items"
+	# Have autoquit launch the build system. autoquit will open an app named "app" in its directory.
+	my_make_alias "${my_src_disk_mount}/Build" "${my_startup_disk_autoquit_dir}/app"
 	
 	# Unmount disk images.
 	my_detach_disk_image ${my_startup_disk_mount}
+	my_detach_disk_image ${my_src_disk_mount}
 	my_detach_disk_image ${my_autoquit_disk_mount}
 	
 	# Mini vMac looks for disks named disk1.dsk through disk3.dsk and automounts them.
@@ -185,7 +189,16 @@ proc my_detach_disk_image {mountpoint} {
 }
 
 proc my_make_alias {src dst} {
-	system "osascript -e 'set my_src to POSIX file \"${src}\"' -e 'set my_dst to POSIX file \"${dst}\"' -e 'tell app \"Finder\" to make new alias file at my_dst to my_src'"
+	set dst_is_dir [file isdirectory "${dst}"]
+	if {${dst_is_dir}} {
+		set dst_dir "${dst}"
+	} else {
+		set dst_dir "[file dirname ${dst}]"
+	}
+	system "osascript -e 'set src to POSIX file \"${src}\"' -e 'set dst_dir to POSIX file \"${dst_dir}\"' -e 'tell app \"Finder\" to make new alias file at dst_dir to src'"
+	if {!${dst_is_dir}} {
+		file rename "[file join ${dst_dir} [file tail ${src}]]" "${dst}"
+	}
 }
 
 livecheck.check     regex
