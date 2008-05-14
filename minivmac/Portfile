@@ -107,7 +107,7 @@ post-extract {
 	system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_compressed} ${workpath}"
 	
 	file mkdir ${my_mnvm_dat}
-	file copy ${my_appdir}/${romfile} ${my_mnvm_dat}
+	ln -s ${my_appdir}/${romfile} ${my_mnvm_dat}
 	
 	# Copy the Disk Tools and Tidbits images from the container image.
 	set my_system_disk_container_mount [my_attach_disk_image ${workpath}/${my_system_disk_container} 0]
