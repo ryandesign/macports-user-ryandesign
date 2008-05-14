@@ -97,7 +97,7 @@ post-extract {
 	file mkdir ${my_mnvm_dat}
 	file copy ${my_appdir}/${romfile} ${my_mnvm_dat}
 	
-	# Copy the disk tools image from the container image.
+	# Copy the Disk Tools image from the container image.
 	set my_system_disk_container_mount [attach_disk_image ${workpath}/${my_system_disk_container} 0]
 	file copy "${my_system_disk_container_mount}/Disk Tools.image" ${workpath}/startup.img
 	detach_disk_image ${my_system_disk_container_mount}
