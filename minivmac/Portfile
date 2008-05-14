@@ -32,16 +32,20 @@ set my_bootstrap                            "Mini vMac.app"
 set my_bootstrap_compressed                 ${name}-${my_bootstrap_version}-umch.bin.tgz
 set my_autoquit                             autquit7-1.1.0
 set my_autoquit_compressed                  ${my_autoquit}.zip
+set my_icons                                icnsosx-1.0.0
+set my_icons_compressed                     ${my_icons}.zip
 set my_system_disk_container                Z-System_7.0.1.smi
 set my_system_disk_container_compressed     ${my_system_disk_container}.bin
 
 distfiles \
 	${my_src_compressed}:minivmac \
+	${my_icons_compressed}:minivmac \
 	${my_autoquit_compressed}:minivmac \
 	${my_system_disk_container_compressed}:apple
 
 extract.only \
 	${my_src_compressed} \
+	${my_icons_compressed} \
 	${my_autoquit_compressed}
 
 checksums \
@@ -53,6 +57,10 @@ checksums \
 		md5 298565ec1ccfe6876768156aaf5f76a0 \
 		sha1 34212dedb1cfb744e6ca8124693f2f6e40094833 \
 		rmd160 042eacfb9ec853589d661c86ffb99d509061eb0f \
+	${my_icons_compressed} \
+		md5 2af006506de7549be14f94317918d59a \
+		sha1 4ef79bb56b988fedfeb82a8b6cafd8066f5bbab2 \
+		rmd160 cef6d7d7578464538d0042b0d98379ae7f18fab7 \
 	${my_autoquit_compressed} \
 		md5 eebe87a27d6db8e8f247f0fffe0f2bd5 \
 		sha1 8199e1da12d01fc210ae1eaa50f794e5b8c479c1 \
@@ -198,6 +206,11 @@ configure {
 pre-build {
 	set my_variation [my_get_variation]
 	build.dir ${workpath}/${my_variation}
+}
+
+post-build {
+	set my_variation [my_get_variation]
+	eval xinstall -m 644 [glob ${workpath}/${my_icons}/icons/*.icns] ${workpath}/${my_variation}/minivmac.app/Contents/Resources
 }
 
 destroot {
