@@ -98,17 +98,17 @@ post-extract {
 	file copy ${my_appdir}/${romfile} ${my_mnvm_dat}
 	
 	# Copy the Disk Tools image from the container image.
-	set my_system_disk_container_mount [attach_disk_image ${workpath}/${my_system_disk_container} 0]
+	set my_system_disk_container_mount [my_attach_disk_image ${workpath}/${my_system_disk_container} 0]
 	file copy "${my_system_disk_container_mount}/Disk Tools.image" ${workpath}/startup.img
-	detach_disk_image ${my_system_disk_container_mount}
+	my_detach_disk_image ${my_system_disk_container_mount}
 	
 	# The disk image mounter likes images to have the .img extension.
 	file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/src.img
 	file rename ${workpath}/${my_autoquit}/${my_autoquit}.dsk ${workpath}/autoquit.img
 	
 	# Mount disk images.
-	set my_autoquit_disk_mount [attach_disk_image ${workpath}/autoquit.img 0]
-	set my_startup_disk_mount [attach_disk_image ${workpath}/startup.img 1]
+	set my_autoquit_disk_mount [my_attach_disk_image ${workpath}/autoquit.img 0]
+	set my_startup_disk_mount [my_attach_disk_image ${workpath}/startup.img 1]
 	
 	# Make room on the startup disk for our things.
 	file delete "${my_startup_disk_mount}/Apple HD SC Setup" "${my_startup_disk_mount}/Disk First Aid"
@@ -119,11 +119,11 @@ post-extract {
 	# Need to copy this with the resource fork.
 	system "ditto --rsrc ${my_autoquit_disk_mount}/AutQuit7 ${my_startup_disk_autoquit_dir}"
 	# Launch autoquit at startup.
-	make_alias "${my_startup_disk_autoquit_dir}/AutQuit7" "${my_startup_disk_mount}/System Folder/Startup Items"
+	my_make_alias "${my_startup_disk_autoquit_dir}/AutQuit7" "${my_startup_disk_mount}/System Folder/Startup Items"
 	
 	# Unmount disk images.
-	detach_disk_image ${my_startup_disk_mount}
-	detach_disk_image ${my_autoquit_disk_mount}
+	my_detach_disk_image ${my_startup_disk_mount}
+	my_detach_disk_image ${my_autoquit_disk_mount}
 	
 	# Mini vMac looks for disks named disk1.dsk through disk3.dsk and automounts them.
 	file rename "${workpath}/startup.img" "${my_mnvm_dat}/disk1.dsk"
@@ -172,7 +172,7 @@ variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a 
 	set romfile_model "Macintosh SE"
 }
 
-proc attach_disk_image {disk_image allow_writing} {
+proc my_attach_disk_image {disk_image allow_writing} {
 	global name workpath
 	set mountpoint [exec mktemp -d -q -t ${name}]
 	# Use this expect script instead of using hdiutil directly, because the
@@ -181,12 +181,12 @@ proc attach_disk_image {disk_image allow_writing} {
 	return ${mountpoint}
 }
 
-proc detach_disk_image {mountpoint} {
+proc my_detach_disk_image {mountpoint} {
 	system "hdiutil detach ${mountpoint}"
 	file delete -force ${mountpoint}
 }
 
-proc make_alias {src dst} {
+proc my_make_alias {src dst} {
 	system "osascript -e 'set my_src to POSIX file \"${src}\"' -e 'set my_dst to POSIX file \"${dst}\"' -e 'tell app \"Finder\" to make new alias file at my_dst to my_src'"
 }
 
