@@ -69,6 +69,18 @@ set my_appdir "/Applications/MacPorts/Mini vMac"
 set romfile vMac.ROM
 set romfile_model "Macintosh Plus or 512Ke"
 set my_mnvm_dat "${workpath}/${my_bootstrap}/Contents/mnvm_dat"
+set my_options_file options.txt
+set my_base_options "-maintainer MacPorts -homepage http://www.macports.org/ -nex"
+set my_target ""
+set my_machine Plus
+
+platform powerpc {
+	set my_target mach
+}
+
+platform i386 {
+	set my_target imch
+}
 
 pre-fetch {
 	if { ! [file exists ${my_appdir}/${romfile}] } {
@@ -97,50 +109,90 @@ post-extract {
 	file mkdir ${my_mnvm_dat}
 	file copy ${my_appdir}/${romfile} ${my_mnvm_dat}
 	
-	# Copy the Disk Tools image from the container image.
+	# Copy the Disk Tools and Tidbits images from the container image.
 	set my_system_disk_container_mount [my_attach_disk_image ${workpath}/${my_system_disk_container} 0]
 	file copy "${my_system_disk_container_mount}/Disk Tools.image" ${workpath}/startup.img
+	file copy "${my_system_disk_container_mount}/Tidbits.image" ${workpath}/tidbits.img
 	my_detach_disk_image ${my_system_disk_container_mount}
 	
 	# The disk image mounter likes images to have the .img extension.
 	file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/src.img
 	file rename ${workpath}/${my_autoquit}/${my_autoquit}.dsk ${workpath}/autoquit.img
 	
-	# Mount disk images.
-	set my_autoquit_disk_mount [my_attach_disk_image ${workpath}/autoquit.img 0]
-	set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 0]
+	# Mount the startup disk and make room on it for our things.
 	set my_startup_disk_mount [my_attach_disk_image ${workpath}/startup.img 1]
-	
-	# Make room on the startup disk for our things.
 	file delete "${my_startup_disk_mount}/Apple HD SC Setup" "${my_startup_disk_mount}/Disk First Aid"
 	
-	# Set up autoquit.
+	# Copy autoquit to the startup disk and make it open at startup.
+	# Need to use ditto to preserve the resource fork.
+	set my_autoquit_disk_mount [my_attach_disk_image ${workpath}/autoquit.img 0]
 	set my_startup_disk_autoquit_dir "${my_startup_disk_mount}/autoquit"
 	file mkdir "${my_startup_disk_autoquit_dir}"
-	# Need to copy this with the resource fork.
 	system "ditto --rsrc ${my_autoquit_disk_mount}/AutQuit7 ${my_startup_disk_autoquit_dir}"
-	# Launch autoquit at startup.
+	my_detach_disk_image ${my_autoquit_disk_mount}
 	my_make_alias "${my_startup_disk_autoquit_dir}/AutQuit7" "${my_startup_disk_mount}/System Folder/Startup Items"
-	# Have autoquit launch the build system. autoquit will open an app named "app" in its directory.
+	
+	# Mount the source disk.
+	set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 1]
+	
+	# Copy TeachText to the source disk. (No room on the startup disk.)
+	set my_tidbits_disk_mount [my_attach_disk_image ${workpath}/tidbits.img 0]
+	system "ditto --rsrc ${my_tidbits_disk_mount}/TeachText ${my_src_disk_mount}"
+	my_detach_disk_image ${my_tidbits_disk_mount}
+	
+	# Force a rebuild of the Desktop files, both to add info about TeachText and
+	# to remove that of Apple HD SC Setup and Disk First Aid (to make more room).
+	file delete ${my_startup_disk_mount}/Desktop ${my_src_disk_mount}/Desktop
+	
+	# Create an empty options file so we can make an alias to it.
+	set my_options_file_id [open ${my_src_disk_mount}/${my_options_file} "w"]
+	close ${my_options_file_id}
+	system "/Developer/Tools/SetFile -c ttxt -t TEXT ${my_src_disk_mount}/${my_options_file}"
+	
+	# Have autoquit launch the build system. If there's an alias "app" in the same directory,
+	# autoquit will open it. If there's also an alias "doc" in the same directory, autoquit
+	# will open the document "doc" into the application "app".
 	my_make_alias "${my_src_disk_mount}/Build" "${my_startup_disk_autoquit_dir}/app"
+	# The build system doesn't support reading text files yet.
+#	my_make_alias "${my_src_disk_mount}/${my_options_file}" "${my_startup_disk_autoquit_dir}/doc"
+	my_make_alias "${my_src_disk_mount}/${my_options_file}" "${my_startup_disk_mount}/System Folder/Startup Items"
 	
 	# Unmount disk images.
 	my_detach_disk_image ${my_startup_disk_mount}
 	my_detach_disk_image ${my_src_disk_mount}
-	my_detach_disk_image ${my_autoquit_disk_mount}
 	
 	# Mini vMac looks for disks named disk1.dsk through disk3.dsk and automounts them.
 	file rename "${workpath}/startup.img" "${my_mnvm_dat}/disk1.dsk"
-	file rename "${workpath}/src.img" "${my_mnvm_dat}/disk2.dsk"
-	
-#	reinplace "s|maintained by unknown|maintained by MacPorts|" \
-#		${worksrcpath}/config/Info.plist
-#	reinplace "s|#define kMaintainerName \"unknown\"|#define kMaintainerName \"MacPorts\"|" \
-#		${worksrcpath}/config/CNFGGLOB.h
 }
 
 configure {
+	# Write our options file.
+	set my_variation ${name}-${version}_${revision}-${my_machine}
+	set my_options "${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}"
+	set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 1]
+	set my_options_file_id [open ${my_src_disk_mount}/${my_options_file} "w"]
+	puts -nonewline ${my_options_file_id} ${my_options}
+	close ${my_options_file_id}
+	my_detach_disk_image ${my_src_disk_mount}
+	
+	# Move the source disk where Mini vMac will find it.
+	file rename "${workpath}/src.img" "${my_mnvm_dat}/disk2.dsk"
+	
+	# Run the build system.
 	system "'${workpath}/${my_bootstrap}/Contents/MacOS/minivmac'"
+	
+	# Give the source disk image the .img extension to appease the disk image mounter.
+	file rename "${my_mnvm_dat}/disk2.dsk" "${workpath}/src.img"
+	
+	# Get the build product.
+	set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 1]
+	if {[file exists ${my_src_disk_mount}/output/${my_variation}]} {
+		file copy ${my_src_disk_mount}/output/${my_variation} ${workpath}
+	}
+	my_detach_disk_image ${my_src_disk_mount}
+}
+
+build {
 	return -code error "portfile incomplete! :("
 }
 
