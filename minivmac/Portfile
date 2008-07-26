@@ -11,6 +11,7 @@ use_zip             yes
 platforms           macosx
 universal_variant   no
 build.target
+use_parallel_build  yes
 
 description \
 	a Mac 128K, Mac 512K, Mac 512KE, Mac Plus and Mac SE emulator
