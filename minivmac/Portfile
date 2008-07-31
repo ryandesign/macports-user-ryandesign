@@ -4,6 +4,7 @@ PortSystem          1.0
 
 name                minivmac
 version             3.0.4
+revision            1
 categories          emulators aqua
 maintainers         ryandesign
 homepage            http://minivmac.sourceforge.net/
@@ -75,7 +76,12 @@ depends_build \
 	port:macutil \
 	bin:expect:expect
 
-set my_appdir "/Applications/MacPorts/Mini vMac"
+# Can be removed once MacPorts 1.7.0 is released
+if {![info exists applications_dir]} {
+    set applications_dir /Applications/MacPorts
+}
+
+set my_appdir "${applications_dir}/Mini vMac"
 set romfile vMac.ROM
 set romfile_model "Macintosh Plus or 512Ke"
 set my_mnvm_dat "${workpath}/${my_bootstrap}/Contents/mnvm_dat"
