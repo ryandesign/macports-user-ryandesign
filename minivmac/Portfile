@@ -76,11 +76,6 @@ depends_build \
 	port:macutil \
 	bin:expect:expect
 
-# Can be removed once MacPorts 1.7.0 is released
-if {![info exists applications_dir]} {
-    set applications_dir /Applications/MacPorts
-}
-
 set my_appdir "${applications_dir}/Mini vMac"
 set romfile vMac.ROM
 set romfile_model "Macintosh Plus or 512Ke"
