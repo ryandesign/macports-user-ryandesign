@@ -28,46 +28,46 @@ master_sites \
     http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-International/Macintosh/System/Full_Installs/:apple
 
 set my_src                                  ${distname}.src
-set my_src_compressed                       ${my_src}.zip
+set my_src_distfile                         ${my_src}.zip
 set my_bootstrap_version                    3.0.4
 set my_bootstrap                            "Mini vMac.app"
-set my_bootstrap_compressed                 ${name}-${my_bootstrap_version}-umch.bin.tgz
+set my_bootstrap_distfile                   ${name}-${my_bootstrap_version}-umch.bin.tgz
 set my_autoquit                             autquit7-1.1.0
-set my_autoquit_compressed                  ${my_autoquit}.zip
+set my_autoquit_distfile                    ${my_autoquit}.zip
 set my_icons                                icnsosx-1.0.0
-set my_icons_compressed                     ${my_icons}.zip
+set my_icons_distfile                       ${my_icons}.zip
 set my_system_disk_container                Z-System_7.0.1.smi
-set my_system_disk_container_compressed     ${my_system_disk_container}.bin
+set my_system_disk_container_distfile       ${my_system_disk_container}.bin
 
 distfiles \
-    ${my_src_compressed}:minivmac \
-    ${my_icons_compressed}:minivmac \
-    ${my_autoquit_compressed}:minivmac \
-    ${my_system_disk_container_compressed}:apple
+    ${my_src_distfile}:minivmac \
+    ${my_icons_distfile}:minivmac \
+    ${my_autoquit_distfile}:minivmac \
+    ${my_system_disk_container_distfile}:apple
 
 extract.only \
-    ${my_src_compressed} \
-    ${my_icons_compressed} \
-    ${my_autoquit_compressed}
+    ${my_src_distfile} \
+    ${my_icons_distfile} \
+    ${my_autoquit_distfile}
 
 checksums \
-    ${my_src_compressed} \
+    ${my_src_distfile} \
         md5     ab308459e98bd5103ad8bbb7dd158eb6 \
         sha1    ff99aa72da0868a5306631f0d06ae190cbd2a03a \
         rmd160  b8f1f5269d21835ff3e9e428da12a7b6c224e60e \
-    ${my_bootstrap_compressed} \
+    ${my_bootstrap_distfile} \
         md5     298565ec1ccfe6876768156aaf5f76a0 \
         sha1    34212dedb1cfb744e6ca8124693f2f6e40094833 \
         rmd160  042eacfb9ec853589d661c86ffb99d509061eb0f \
-    ${my_icons_compressed} \
+    ${my_icons_distfile} \
         md5     2af006506de7549be14f94317918d59a \
         sha1    4ef79bb56b988fedfeb82a8b6cafd8066f5bbab2 \
         rmd160  cef6d7d7578464538d0042b0d98379ae7f18fab7 \
-    ${my_autoquit_compressed} \
+    ${my_autoquit_distfile} \
         md5     eebe87a27d6db8e8f247f0fffe0f2bd5 \
         sha1    8199e1da12d01fc210ae1eaa50f794e5b8c479c1 \
         rmd160  f493a59fd637caa8a7937fbefaf6ebdf4a07c7f5 \
-    ${my_system_disk_container_compressed} \
+    ${my_system_disk_container_distfile} \
         md5     5e7b4c0ce13e65546eb795c35879751a \
         sha1    bf37fde76dfd9d4ed35526954c149566d761c2a6 \
         rmd160  08788cbcca023ea9a0713ecec4781c35aa5a9185
@@ -112,11 +112,11 @@ pre-fetch {
 }
 
 post-extract {
-    system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_compressed}"
+    system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_distfile}"
     
     xinstall -W ${filespath} attach.exp demacbinary.sh ${workpath}
     
-    system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_compressed} ${workpath}"
+    system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${workpath}"
     
     file mkdir ${my_mnvm_dat}
     ln -s ${my_appdir}/${romfile} ${my_mnvm_dat}

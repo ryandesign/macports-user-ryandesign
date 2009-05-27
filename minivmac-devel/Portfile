@@ -31,20 +31,20 @@ master_sites            sourceforge:${my_name}
 
 distname                ${my_name}${version_short_date}
 set my_src              ${distname}.src
-set my_src_compressed   ${my_src}.zip
+set my_src_distfile     ${my_src}.zip
 set my_icons            icnsosx-1.0.0
-set my_icons_compressed ${my_icons}.zip
+set my_icons_distfile   ${my_icons}.zip
 
 distfiles \
-    ${my_src_compressed} \
-    ${my_icons_compressed}
+    ${my_src_distfile} \
+    ${my_icons_distfile}
 
 checksums \
-    ${my_src_compressed} \
+    ${my_src_distfile} \
         md5     7defdcb859cdda0df3bdc3c252370a70 \
         sha1    f4a80b326380746b88993d53eeb6a7d46768358b \
         rmd160  828eb032ea3ac0f52054d0c8af1d6910ded1dff0 \
-    ${my_icons_compressed} \
+    ${my_icons_distfile} \
         md5     2af006506de7549be14f94317918d59a \
         sha1    4ef79bb56b988fedfeb82a8b6cafd8066f5bbab2 \
         rmd160  cef6d7d7578464538d0042b0d98379ae7f18fab7
