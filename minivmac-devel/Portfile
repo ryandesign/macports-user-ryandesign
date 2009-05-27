@@ -122,7 +122,7 @@ post-extract {
 configure {
     # Build the build system.
     if {![file exists ${worksrcpath}/Build.app]} {
-        set my_cmd "cd ${worksrcpath}/projects/gcc_${my_target} && make"
+        set my_cmd "cd ${worksrcpath}/projects/gcc_${my_target} && [build_getnicevalue] make [build_getmakejobs]"
         ui_debug ${my_cmd}
         system ${my_cmd}
         file rename ${worksrcpath}/projects/gcc_${my_target}/Build.app ${worksrcpath}
