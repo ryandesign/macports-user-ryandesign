@@ -90,7 +90,7 @@ pre-fetch {
 }
 
 post-extract {
-    xinstall -W ${filespath} attach.exp runbuild.sh ${workpath}
+    xinstall -W ${filespath} runbuild.sh ${workpath}
     
     # The disk image mounter likes images to have the .img extension.
     file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/src.img
@@ -194,9 +194,14 @@ variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a 
 proc my_attach_disk_image {disk_image allow_writing} {
     global name workpath
     set mountpoint [exec mktemp -d -q -t ${name}]
-    # Use this expect script instead of using hdiutil directly, because the
-    # system disk image has a license agreement we must agree to.
-    system "${workpath}/attach.exp '${disk_image}' '${mountpoint}' '${allow_writing}'"
+    if {${allow_writing}} {
+        set flag "-readwrite"
+    } else {
+        set flag "-readonly"
+    }
+    set my_cmd "hdiutil attach ${disk_image} -mountpoint ${mountpoint} -private -nobrowse -noautoopen -noautofsck -noverify ${flag}"
+    ui_debug ${my_cmd}
+    system ${my_cmd}
     return ${mountpoint}
 }
 
