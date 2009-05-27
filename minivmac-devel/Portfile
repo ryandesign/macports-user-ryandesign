@@ -1,6 +1,6 @@
 # $Id$
 
-PortSystem          1.0
+PortSystem              1.0
 
 name                    minivmac-devel
 set my_name             minivmac
@@ -8,210 +8,210 @@ version                 3.1.0-20090402
 set version_number      [lindex [split ${version} -] 0]
 set version_date        [lindex [split ${version} -] 1]
 set version_short_date  [string range ${version_date} 2 end]
-categories          emulators aqua
-maintainers         ryandesign
-homepage            http://minivmac.sourceforge.net/
-use_zip             yes
-platforms           macosx
-universal_variant   no
+categories              emulators aqua
+maintainers             ryandesign
+homepage                http://minivmac.sourceforge.net/
+use_zip                 yes
+platforms               macosx
+universal_variant       no
 build.target
-use_parallel_build  yes
+use_parallel_build      yes
 dist_subdir             ${my_name}
 
 description \
-	a Mac 128K, Mac 512K, Mac 512KE, Mac Plus and Mac SE emulator
+    a Mac 128K, Mac 512K, Mac 512KE, Mac Plus and Mac SE emulator
 
 long_description \
-	Mini vMac is a Macintosh emulator. It emulates the earliest Macs, \
-	from the original Mac 128K (built 1984-85) to the Mac SE (1987-1990). \
-	The default is to emulate a Mac Plus (1986-1990)\; this is also \
-	the best-tested and therefore recommended emulation.
+    Mini vMac is a Macintosh emulator. It emulates the earliest Macs, \
+    from the original Mac 128K (built 1984-85) to the Mac SE (1987-1990). \
+    The default is to emulate a Mac Plus (1986-1990)\; this is also \
+    the best-tested and therefore recommended emulation.
 
 master_sites            sourceforge:${my_name}
 
-distname                                    ${my_name}${version_short_date}
-set my_src                                  ${distname}.src
-set my_src_compressed                       ${my_src}.zip
-set my_icons                                icnsosx-1.0.0
-set my_icons_compressed                     ${my_icons}.zip
+distname                ${my_name}${version_short_date}
+set my_src              ${distname}.src
+set my_src_compressed   ${my_src}.zip
+set my_icons            icnsosx-1.0.0
+set my_icons_compressed ${my_icons}.zip
 
 distfiles \
-	${my_src_compressed} \
-	${my_icons_compressed}
+    ${my_src_compressed} \
+    ${my_icons_compressed}
 
 checksums \
-	${my_src_compressed} \
-		md5     7defdcb859cdda0df3bdc3c252370a70 \
-		sha1    f4a80b326380746b88993d53eeb6a7d46768358b \
-		rmd160  828eb032ea3ac0f52054d0c8af1d6910ded1dff0 \
-	${my_icons_compressed} \
-		md5 2af006506de7549be14f94317918d59a \
-		sha1 4ef79bb56b988fedfeb82a8b6cafd8066f5bbab2 \
-		rmd160 cef6d7d7578464538d0042b0d98379ae7f18fab7
+    ${my_src_compressed} \
+        md5     7defdcb859cdda0df3bdc3c252370a70 \
+        sha1    f4a80b326380746b88993d53eeb6a7d46768358b \
+        rmd160  828eb032ea3ac0f52054d0c8af1d6910ded1dff0 \
+    ${my_icons_compressed} \
+        md5     2af006506de7549be14f94317918d59a \
+        sha1    4ef79bb56b988fedfeb82a8b6cafd8066f5bbab2 \
+        rmd160  cef6d7d7578464538d0042b0d98379ae7f18fab7
 
 depends_build \
-	bin:expect:expect
+    bin:expect:expect
 
 patchfiles \
-	patch-build.diff
+    patch-build.diff
 
-set my_appdir "${applications_dir}/Mini vMac"
-set romfile vMac.ROM
-set romfile_model "Macintosh Plus or 512Ke"
-set my_options_file options.txt
-set my_base_options "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
-set my_target ""
-set my_machine Plus
+set my_appdir           "${applications_dir}/Mini vMac"
+set romfile             vMac.ROM
+set romfile_model       "Macintosh Plus or 512Ke"
+set my_options_file     options.txt
+set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
+set my_target           ""
+set my_machine          Plus
 set my_variation_machine mac[string tolower ${my_machine}]
 
 platform powerpc {
-	set my_target mach
+    set my_target mach
 }
 
 platform i386 {
-	set my_target imch
+    set my_target imch
 }
 
 pre-fetch {
-	if { ! [file exists ${my_appdir}/${romfile}] } {
-		ui_msg "**************************************************************"
-		ui_msg "Mini vMac requires a ROM file from the type of machine you're"
-		ui_msg "emulating in order to work. The ROM file is not included with"
-		ui_msg "this package because it is copyrighted Apple software."
-		ui_msg "Download the CopyRoms program from the Mini vMac web site"
-		ui_msg "(${homepage} > More > Extras)"
-		ui_msg "and transfer it to a real physical ${romfile_model}"
-		ui_msg "that you own. Run the CopyRoms program there, then transfer"
-		ui_msg "the ROM file back to this Mac, name it ${romfile},"
-		ui_msg "and put it in ${my_appdir}."
-		ui_msg "**************************************************************"
-		return -code error "missing ROM file"
-	}
+    if { ! [file exists ${my_appdir}/${romfile}] } {
+        ui_msg "**************************************************************"
+        ui_msg "Mini vMac requires a ROM file from the type of machine you're"
+        ui_msg "emulating in order to work. The ROM file is not included with"
+        ui_msg "this package because it is copyrighted Apple software."
+        ui_msg "Download the CopyRoms program from the Mini vMac web site"
+        ui_msg "(${homepage} > More > Extras)"
+        ui_msg "and transfer it to a real physical ${romfile_model}"
+        ui_msg "that you own. Run the CopyRoms program there, then transfer"
+        ui_msg "the ROM file back to this Mac, name it ${romfile},"
+        ui_msg "and put it in ${my_appdir}."
+        ui_msg "**************************************************************"
+        return -code error "missing ROM file"
+    }
 }
 
 post-extract {
-	xinstall -W ${filespath} attach.exp runbuild.sh ${workpath}
-	
-	# The disk image mounter likes images to have the .img extension.
-	file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/src.img
-	
-	# Mount the source disk image.
-	set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 0]
-	
-	# Copy the source from the disk image into the workpath.
-	file mkdir ${worksrcpath}
-	foreach thing {COPYING.txt README.txt output projects source} {
-		copy ${my_src_disk_mount}/${thing} ${worksrcpath}
-	}
-	
-	# Unmount the disk image.
-	my_detach_disk_image ${my_src_disk_mount}
-	
-	# Convert CR to LF line endings.
-	fs-traverse thing ${worksrcpath} {
-		if {[file isfile ${thing}]} {
-			foreach extension {.a .c .h .i .plist .r Makefile} {
-				if {[string match "*${extension}" ${thing}]} {
-					reinplace "s/\r/\\\n/g" ${thing}
-				}
-			}
-		}
-	}
+    xinstall -W ${filespath} attach.exp runbuild.sh ${workpath}
+    
+    # The disk image mounter likes images to have the .img extension.
+    file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/src.img
+    
+    # Mount the source disk image.
+    set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 0]
+    
+    # Copy the source from the disk image into the workpath.
+    file mkdir ${worksrcpath}
+    foreach thing {COPYING.txt README.txt output projects source} {
+        copy ${my_src_disk_mount}/${thing} ${worksrcpath}
+    }
+    
+    # Unmount the disk image.
+    my_detach_disk_image ${my_src_disk_mount}
+    
+    # Convert CR to LF line endings.
+    fs-traverse thing ${worksrcpath} {
+        if {[file isfile ${thing}]} {
+            foreach extension {.a .c .h .i .plist .r Makefile} {
+                if {[string match "*${extension}" ${thing}]} {
+                    reinplace "s/\r/\\\n/g" ${thing}
+                }
+            }
+        }
+    }
 }
 
 configure {
-	# Build the build system.
-	if {![file exists ${worksrcpath}/Build.app]} {
-		set my_cmd "cd ${worksrcpath}/projects/gcc_${my_target} && make"
-		ui_debug ${my_cmd}
-		system ${my_cmd}
-		file rename ${worksrcpath}/projects/gcc_${my_target}/Build.app ${worksrcpath}
-	}
-	
-	# Write our options file.
-	set my_variation [my_get_variation]
-	set my_options "${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}"
-	set my_options_file_id [open ${worksrcpath}/${my_options_file} "w"]
-	puts -nonewline ${my_options_file_id} ${my_options}
-	close ${my_options_file_id}
-	
-	# Run the build system.
-	set my_cmd "${workpath}/runbuild.sh ${worksrcpath} ${worksrcpath}/${my_options_file}"
-	ui_debug ${my_cmd}
-	system ${my_cmd}
-	
-	# Get the build product.
-	file rename ${worksrcpath}/output/${my_variation} ${workpath}
+    # Build the build system.
+    if {![file exists ${worksrcpath}/Build.app]} {
+        set my_cmd "cd ${worksrcpath}/projects/gcc_${my_target} && make"
+        ui_debug ${my_cmd}
+        system ${my_cmd}
+        file rename ${worksrcpath}/projects/gcc_${my_target}/Build.app ${worksrcpath}
+    }
+    
+    # Write our options file.
+    set my_variation [my_get_variation]
+    set my_options "${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}"
+    set my_options_file_id [open ${worksrcpath}/${my_options_file} "w"]
+    puts -nonewline ${my_options_file_id} ${my_options}
+    close ${my_options_file_id}
+    
+    # Run the build system.
+    set my_cmd "${workpath}/runbuild.sh ${worksrcpath} ${worksrcpath}/${my_options_file}"
+    ui_debug ${my_cmd}
+    system ${my_cmd}
+    
+    # Get the build product.
+    file rename ${worksrcpath}/output/${my_variation} ${workpath}
 }
 
 pre-build {
-	set my_variation [my_get_variation]
-	build.dir ${workpath}/${my_variation}
+    set my_variation [my_get_variation]
+    build.dir ${workpath}/${my_variation}
 }
 
 post-build {
-	set my_variation [my_get_variation]
-	eval xinstall -m 644 [glob ${workpath}/${my_icons}/icons/*.icns] ${workpath}/${my_variation}/minivmac.app/Contents/Resources
+    set my_variation [my_get_variation]
+    eval xinstall -m 644 [glob ${workpath}/${my_icons}/icons/*.icns] ${workpath}/${my_variation}/minivmac.app/Contents/Resources
 }
 
 destroot {
-	set my_variation [my_get_variation]
-	xinstall -d ${destroot}${my_appdir}
-	file copy ${workpath}/${my_variation}/minivmac.app \
-		${destroot}${my_appdir}/Mini\ vMac\ ${my_machine}.app
+    set my_variation [my_get_variation]
+    xinstall -d ${destroot}${my_appdir}
+    file copy ${workpath}/${my_variation}/minivmac.app \
+        ${destroot}${my_appdir}/Mini\ vMac\ ${my_machine}.app
 }
 
 if { ![variant_isset mac128k] && ![variant_isset mac512k] && ![variant_isset mac512ke] && ![variant_isset macse] } {
-	default_variants +macplus
+    default_variants +macplus
 }
 
 variant mac128k conflicts mac512k mac512ke macplus macse description {Emulate a Macintosh with 128K RAM and 2 drives} {
-	patchfiles-append patch-CNFGGLOB.h-mac128k.diff
-	set romfile Mac128K.ROM
-	set romfile_model "Macintosh 128K or 512K"
+    patchfiles-append patch-CNFGGLOB.h-mac128k.diff
+    set romfile Mac128K.ROM
+    set romfile_model "Macintosh 128K or 512K"
 }
 
 variant mac512k conflicts mac128k mac512ke macplus macse description {Emulate a Macintosh 512K with 512K RAM and 2 drives} {
-	patchfiles-append patch-CNFGGLOB.h-mac512k.diff
-	set romfile Mac128K.ROM
-	set romfile_model "Macintosh 128K or 512K"
+    patchfiles-append patch-CNFGGLOB.h-mac512k.diff
+    set romfile Mac128K.ROM
+    set romfile_model "Macintosh 128K or 512K"
 }
 
 variant mac512ke conflicts mac128k mac512k macplus macse description {Emulate a Macintosh 512Ke with 512K RAM and 6 drives} {
-	patchfiles-append patch-CNFGGLOB.h-mac512ke.diff
+    patchfiles-append patch-CNFGGLOB.h-mac512ke.diff
 }
 
 variant macplus conflicts mac128k mac512k mac512ke macse description {Emulate a Macintosh Plus with 4 MB RAM and 6 drives (default)} {
-	# Mac Plus emulation is the default so we don't need to do anything here
+    # Mac Plus emulation is the default so we don't need to do anything here
 }
 
 variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a Macintosh SE with 4 MB RAM and 6 drives} {
-	patchfiles-append patch-CNFGGLOB.h-macse.diff
-	set romfile MacSE.ROM
-	set romfile_model "Macintosh SE"
+    patchfiles-append patch-CNFGGLOB.h-macse.diff
+    set romfile MacSE.ROM
+    set romfile_model "Macintosh SE"
 }
 
 proc my_attach_disk_image {disk_image allow_writing} {
-	global name workpath
-	set mountpoint [exec mktemp -d -q -t ${name}]
-	# Use this expect script instead of using hdiutil directly, because the
-	# system disk image has a license agreement we must agree to.
-	system "${workpath}/attach.exp '${disk_image}' '${mountpoint}' '${allow_writing}'"
-	return ${mountpoint}
+    global name workpath
+    set mountpoint [exec mktemp -d -q -t ${name}]
+    # Use this expect script instead of using hdiutil directly, because the
+    # system disk image has a license agreement we must agree to.
+    system "${workpath}/attach.exp '${disk_image}' '${mountpoint}' '${allow_writing}'"
+    return ${mountpoint}
 }
 
 proc my_detach_disk_image {mountpoint} {
-	system "hdiutil detach ${mountpoint} -force"
-	file delete -force ${mountpoint}
+    system "hdiutil detach ${mountpoint} -force"
+    file delete -force ${mountpoint}
 }
 
 proc my_get_variation {} {
-	global version revision my_variation_machine
-	# Due to limitations of the build system, the variation name cannot be longer than 27 characters.
-	return ${version}_${revision}-${my_variation_machine}
+    global version revision my_variation_machine
+    # Due to limitations of the build system, the variation name cannot be longer than 27 characters.
+    return ${version}_${revision}-${my_variation_machine}
 }
 
-livecheck.check     regex
-livecheck.version   ${version_short_date}
-livecheck.url       ${homepage}develop/
-livecheck.regex     ${my_name}(\[0-9\]+)\\.src
+livecheck.check         regex
+livecheck.version       ${version_short_date}
+livecheck.url           ${homepage}develop/
+livecheck.regex         ${my_name}(\[0-9\]+)\\.src
