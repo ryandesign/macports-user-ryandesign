@@ -49,9 +49,6 @@ checksums \
         sha1    4ef79bb56b988fedfeb82a8b6cafd8066f5bbab2 \
         rmd160  cef6d7d7578464538d0042b0d98379ae7f18fab7
 
-depends_build \
-    bin:expect:expect
-
 patchfiles \
     patch-build.diff
 
