@@ -72,7 +72,7 @@ platform i386 {
     set my_target imch
 }
 
-pre-fetch {
+post-install {
     if { ! [file exists ${my_appdir}/${romfile}] } {
         ui_msg "**************************************************************"
         ui_msg "Mini vMac requires a ROM file from the type of machine you're"
@@ -85,7 +85,6 @@ pre-fetch {
         ui_msg "the ROM file back to this Mac, name it ${romfile},"
         ui_msg "and put it in ${my_appdir}."
         ui_msg "**************************************************************"
-        return -code error "missing ROM file"
     }
 }
 
