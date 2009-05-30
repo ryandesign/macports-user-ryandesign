@@ -1,5 +1,13 @@
 --- source/build/c_src/CMDARGW1.i
 +++ source/build/c_src/CMDARGW1.i
+@@ -1437,7 +1437,6 @@
+ 				the window is hidden so it wouldn't matter whether we called ShowControl or not.
+ 			*/
+ 			AdjustScrollValues(false);
+-			ShowWindow(window);
+ 			IsOk = trueblnr;
+ 		} else {
+ 			CloseAWindow(window); /* otherwise regret we ever created it... */
 @@ -1496,12 +1496,47 @@
  	return noErr;
  }
