@@ -60,11 +60,11 @@ set my_target           ""
 
 #   variation_id    variation_suffix    variation_options
 set my_variations {
-    128k            "128K"              {-m 128K}
-    512k            "512K"              {-m 128K -mem 512K}
-    512ke           "512Ke"             {-m 512Ke}
-    plus            "Plus"              {-m Plus}
-    se              "SE"                {-m SE}
+    128K            "128K"              {-m 128K}
+    512K            "512K"              {-m 128K -mem 512K}
+    512Ke           "512Ke"             {-m 512Ke}
+    Plus            "Plus"              {-m Plus}
+    SE              "SE"                {-m SE}
 }
 
 platform powerpc {
