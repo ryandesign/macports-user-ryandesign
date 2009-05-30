@@ -5,6 +5,7 @@ PortSystem              1.0
 name                    minivmac-devel
 set my_name             minivmac
 version                 3.1.0-20090402
+revision                1
 set version_number      [lindex [split ${version} -] 0]
 set version_date        [lindex [split ${version} -] 1]
 set version_short_date  [string range ${version_date} 2 end]
@@ -58,8 +59,15 @@ set romfile_model       "Macintosh Plus or 512Ke"
 set my_options_file     options.txt
 set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
 set my_target           ""
-set my_machine          Plus
-set my_variation_machine mac[string tolower ${my_machine}]
+
+#   variation_id    variation_suffix    variation_options
+set my_variations {
+    128k            "128K"              {-m 128K}
+    512k            "512K"              {-m 128K -mem 512K}
+    512ke           "512Ke"             {-m 512Ke}
+    plus            "Plus"              {-m Plus}
+    se              "SE"                {-m SE}
+}
 
 platform powerpc {
     set my_target mach
@@ -124,67 +132,50 @@ configure {
         file rename ${worksrcpath}/projects/gcc_${my_target}/Build.app ${worksrcpath}
     }
     
-    # Write our options file.
-    set my_variation [my_get_variation]
-    set my_options "${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}"
-    set my_options_file_id [open ${worksrcpath}/${my_options_file} "w"]
-    puts -nonewline ${my_options_file_id} ${my_options}
-    close ${my_options_file_id}
-    
-    # Run the build system.
-    set my_cmd "${workpath}/runbuild.sh ${worksrcpath} ${worksrcpath}/${my_options_file}"
-    ui_debug ${my_cmd}
-    system ${my_cmd}
-    
-    # Get the build product.
-    file rename ${worksrcpath}/output/${my_variation} ${workpath}
+    file mkdir ${workpath}/${my_target}
+    foreach {variation_id variation_suffix variation_options} ${my_variations} {
+        ui_debug "Configuring ${variation_id}"
+        
+        # Due to limitations of the build system, the variation name cannot be longer than 27 characters.
+        set variation_name ${version}_${revision}-${variation_id}
+        
+        # Write our options file.
+        set my_options "${my_base_options} -t ${my_target} -n ${variation_name} ${variation_options}"
+        set my_options_file_id [open ${worksrcpath}/${my_options_file} "w"]
+        puts -nonewline ${my_options_file_id} ${my_options}
+        close ${my_options_file_id}
+        
+        # Run the build system.
+        set my_cmd "${workpath}/runbuild.sh ${worksrcpath} ${worksrcpath}/${my_options_file}"
+        ui_debug ${my_cmd}
+        system ${my_cmd}
+        
+        # Get the build product.
+        file rename ${worksrcpath}/output/${variation_name} ${workpath}/${my_target}/${variation_id}
+    }
 }
 
-pre-build {
-    set my_variation [my_get_variation]
-    build.dir ${workpath}/${my_variation}
-}
-
-post-build {
-    set my_variation [my_get_variation]
-    eval xinstall -m 644 [glob ${workpath}/${my_icons}/icons/*.icns] ${workpath}/${my_variation}/minivmac.app/Contents/Resources
+build {
+    foreach {variation_id variation_suffix variation_options} ${my_variations} {
+        ui_debug "Building ${variation_id}"
+        
+        build.dir ${workpath}/${my_target}/${variation_id}
+        set my_cmd "cd ${build.dir} && [build_getnicevalue] ${build.cmd} ${build.target} [build_getmakejobs]"
+        ui_debug ${my_cmd}
+        system ${my_cmd}
+        
+        eval xinstall -m 644 [glob ${workpath}/${my_icons}/icons/*.icns] ${workpath}/${my_target}/${variation_id}/minivmac.app/Contents/Resources
+    }
 }
 
 destroot {
-    set my_variation [my_get_variation]
     xinstall -d ${destroot}${my_appdir}
-    file copy ${workpath}/${my_variation}/minivmac.app \
-        ${destroot}${my_appdir}/Mini\ vMac\ ${my_machine}.app
-}
-
-if { ![variant_isset mac128k] && ![variant_isset mac512k] && ![variant_isset mac512ke] && ![variant_isset macse] } {
-    default_variants +macplus
-}
-
-variant mac128k conflicts mac512k mac512ke macplus macse description {Emulate a Macintosh with 128K RAM and 2 drives} {
-    patchfiles-append patch-CNFGGLOB.h-mac128k.diff
-    set romfile Mac128K.ROM
-    set romfile_model "Macintosh 128K or 512K"
-}
-
-variant mac512k conflicts mac128k mac512ke macplus macse description {Emulate a Macintosh 512K with 512K RAM and 2 drives} {
-    patchfiles-append patch-CNFGGLOB.h-mac512k.diff
-    set romfile Mac128K.ROM
-    set romfile_model "Macintosh 128K or 512K"
-}
-
-variant mac512ke conflicts mac128k mac512k macplus macse description {Emulate a Macintosh 512Ke with 512K RAM and 6 drives} {
-    patchfiles-append patch-CNFGGLOB.h-mac512ke.diff
-}
-
-variant macplus conflicts mac128k mac512k mac512ke macse description {Emulate a Macintosh Plus with 4 MB RAM and 6 drives (default)} {
-    # Mac Plus emulation is the default so we don't need to do anything here
-}
-
-variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a Macintosh SE with 4 MB RAM and 6 drives} {
-    patchfiles-append patch-CNFGGLOB.h-macse.diff
-    set romfile MacSE.ROM
-    set romfile_model "Macintosh SE"
+    foreach {variation_id variation_suffix variation_options} ${my_variations} {
+        ui_debug "Staging ${variation_id}"
+        
+        file copy ${workpath}/${my_target}/${variation_id}/minivmac.app \
+            ${destroot}${my_appdir}/Mini\ vMac\ ${variation_suffix}.app
+    }
 }
 
 proc my_attach_disk_image {disk_image allow_writing} {
@@ -206,12 +197,6 @@ proc my_detach_disk_image {mountpoint} {
     ui_debug ${my_cmd}
     system ${my_cmd}
     file delete -force ${mountpoint}
-}
-
-proc my_get_variation {} {
-    global version revision my_variation_machine
-    # Due to limitations of the build system, the variation name cannot be longer than 27 characters.
-    return ${version}_${revision}-${my_variation_machine}
 }
 
 livecheck.check         regex
