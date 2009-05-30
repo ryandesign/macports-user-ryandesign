@@ -56,7 +56,6 @@ patchfiles \
 set my_appdir           "${applications_dir}/Mini vMac"
 set romfile             vMac.ROM
 set romfile_model       "Macintosh Plus or 512Ke"
-set my_options_file     options.txt
 set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
 set my_target           ""
 
@@ -140,13 +139,14 @@ configure {
         set variation_name ${version}_${revision}-${variation_id}
         
         # Write our options file.
+        set my_options_file ${workpath}/${variation_name}.txt
         set my_options "${my_base_options} -t ${my_target} -n ${variation_name} ${variation_options}"
-        set my_options_file_id [open ${worksrcpath}/${my_options_file} "w"]
+        set my_options_file_id [open ${my_options_file} "w"]
         puts -nonewline ${my_options_file_id} ${my_options}
         close ${my_options_file_id}
         
         # Run the build system.
-        set my_cmd "${workpath}/runbuild.sh ${worksrcpath} ${worksrcpath}/${my_options_file}"
+        set my_cmd "${workpath}/runbuild.sh ${worksrcpath} ${my_options_file}"
         ui_debug ${my_cmd}
         system ${my_cmd}
         
