@@ -5,7 +5,7 @@ PortSystem              1.0
 name                    minivmac-devel
 set my_name             minivmac
 version                 3.1.0-20090402
-revision                1
+revision                2
 set version_number      [lindex [split ${version} -] 0]
 set version_date        [lindex [split ${version} -] 1]
 set version_short_date  [string range ${version_date} 2 end]
@@ -163,17 +163,28 @@ build {
         ui_debug ${my_cmd}
         system ${my_cmd}
         
-        eval xinstall -m 644 [glob ${workpath}/${my_icons}/icons/*.icns] ${workpath}/${my_target}/${variation_id}/minivmac.app/Contents/Resources
+        # Only keep a single copy of the Resources to save space.
+        if {![file exists ${workpath}/Resources]} {
+            copy ${workpath}/${my_target}/${variation_id}/minivmac.app/Contents/Resources ${workpath}
+        }
+        delete ${workpath}/${my_target}/${variation_id}/minivmac.app/Contents/Resources
     }
 }
 
 destroot {
+    set my_sharedir ${prefix}/share/${my_name}/
+    xinstall -d ${destroot}${my_sharedir}
+    copy ${workpath}/Resources ${destroot}${my_sharedir}
+    eval xinstall -m 644 [glob ${workpath}/${my_icons}/icons/*.icns] ${destroot}${my_sharedir}/Resources
+    
     xinstall -d ${destroot}${my_appdir}
     foreach {variation_id variation_suffix variation_options} ${my_variations} {
         ui_debug "Staging ${variation_id}"
         
+        set my_app "${my_appdir}/Mini vMac ${variation_suffix}.app"
         file copy ${workpath}/${my_target}/${variation_id}/minivmac.app \
-            ${destroot}${my_appdir}/Mini\ vMac\ ${variation_suffix}.app
+            ${destroot}${my_app}
+        ln -s ${my_sharedir}/Resources ${destroot}${my_app}/Contents
     }
 }
 
