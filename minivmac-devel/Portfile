@@ -67,7 +67,6 @@ set my_variations {
 
 set my_romfiles {
     Mac128K.ROM
-    Mac512K.ROM
     vMac.ROM
     MacSE.ROM
 }
