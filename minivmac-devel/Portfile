@@ -71,6 +71,19 @@ set my_romfiles {
     MacSE.ROM
 }
 
+variant unsupported description {Also build unfinished Mac Classic, Mac II, and Mac IIx emulators} {
+    set my_variations [concat ${my_variations} {
+        Classic     "Classic"           {-m Classic}
+        II          "II"                {-m II -mem 8M -hres 800 -vres 600 -depth 0}
+        IIx         "IIx"               {-m IIx -mem 8M -hres 800 -vres 600 -depth 0}
+    }]
+    set my_romfiles [concat ${my_romfiles} {
+        Classic.ROM
+        MacII.ROM
+        MacIIx.ROM
+    }]
+}
+
 platform powerpc {
     set my_target mach
 }
