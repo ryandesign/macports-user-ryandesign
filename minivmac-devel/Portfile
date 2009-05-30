@@ -54,8 +54,6 @@ patchfiles \
     patch-build.diff
 
 set my_appdir           "${applications_dir}/Mini vMac"
-set romfile             vMac.ROM
-set romfile_model       "Macintosh Plus or 512Ke"
 set my_target           ""
 
 #   variation_id    variation_suffix    variation_options
@@ -67,6 +65,13 @@ set my_variations {
     SE              "SE"                {-m SE}
 }
 
+set my_romfiles {
+    Mac128K.ROM
+    Mac512K.ROM
+    vMac.ROM
+    MacSE.ROM
+}
+
 platform powerpc {
     set my_target mach
 }
@@ -76,18 +81,24 @@ platform i386 {
 }
 
 post-install {
-    if { ! [file exists ${my_appdir}/${romfile}] } {
-        ui_msg "**************************************************************"
-        ui_msg "Mini vMac requires a ROM file from the type of machine you're"
-        ui_msg "emulating in order to work. The ROM file is not included with"
-        ui_msg "this package because it is copyrighted Apple software."
-        ui_msg "Download the CopyRoms program from the Mini vMac web site"
-        ui_msg "(${homepage} > More > Extras)"
-        ui_msg "and transfer it to a real physical ${romfile_model}"
-        ui_msg "that you own. Run the CopyRoms program there, then transfer"
-        ui_msg "the ROM file back to this Mac, name it ${romfile},"
-        ui_msg "and put it in ${my_appdir}."
-        ui_msg "**************************************************************"
+    set found 0
+    foreach my_romfile ${my_romfiles} {
+        if {[file exists ${my_appdir}/${my_romfile}]} {
+            ui_debug "Found ROM file ${my_appdir}/${my_romfile}"
+            set found 1
+        }
+    }
+    if {!${found}} {
+        ui_msg "****************************************************************"
+        ui_msg "Mini vMac requires a ROM file from the type of machine(s) you're"
+        ui_msg "emulating in order to work. ROM files are not included with this"
+        ui_msg "package because they are copyrighted Apple software."
+        ui_msg "To create a ROM file, download the CopyRoms program from"
+        ui_msg "${homepage}extras/copyroms.html"
+        ui_msg "and transfer it to a real physical early Macintosh that you own."
+        ui_msg "Run the CopyRoms program there, then transfer the ROM file back"
+        ui_msg "to this Mac and put it in ${my_appdir}."
+        ui_msg "****************************************************************"
     }
 }
 
