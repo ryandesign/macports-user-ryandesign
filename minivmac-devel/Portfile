@@ -5,7 +5,7 @@ PortSystem              1.0
 name                    minivmac-devel
 set my_name             minivmac
 version                 3.1.0-20090402
-revision                3
+revision                4
 set version_number      [lindex [split ${version} -] 0]
 set version_date        [lindex [split ${version} -] 1]
 set version_short_date  [string range ${version_date} 2 end]
@@ -74,8 +74,8 @@ set my_romfiles {
 variant unsupported description {Also build unfinished Mac Classic, Mac II, and Mac IIx emulators} {
     set my_variations [concat ${my_variations} {
         Classic     "Classic"           {-m Classic}
-        II          "II"                {-m II -mem 8M -hres 800 -vres 600 -depth 0}
-        IIx         "IIx"               {-m IIx -mem 8M -hres 800 -vres 600 -depth 0}
+        II          "II"                {-m II -mem 8M -hres 800 -vres 600 -depth 3}
+        IIx         "IIx"               {-m IIx -mem 8M -hres 800 -vres 600 -depth 3}
     }]
     set my_romfiles [concat ${my_romfiles} {
         Classic.ROM
