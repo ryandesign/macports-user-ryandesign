@@ -1,0 +1,20 @@
+#!/bin/bash
+# $Id$
+
+PROG=$(basename "$0")
+case "$PROG" in
+	cc)
+		NEWPROG=gcc
+		;;
+	c++)
+		NEWPROG=g++
+		;;
+	*)
+		NEWPROG="$PROG"
+		;;
+esac
+
+echo "Error: You tried to use $PROG instead of /usr/bin/$NEWPROG-*:" 1>&2
+echo "$PROG $@" 1>&2
+echo "See http://trac.macports.org/wiki/UsingTheRightCompiler" 1>&2
+exit 1
