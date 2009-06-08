@@ -14,7 +14,7 @@ case "$PROG" in
 		;;
 esac
 
-echo "Error: You tried to use $PROG instead of /usr/bin/$NEWPROG-*:" 1>&2
 echo "$PROG $@" 1>&2
+echo "$PROG: Error: You should be using /usr/bin/$NEWPROG-*:" 1>&2
 echo "See http://trac.macports.org/wiki/UsingTheRightCompiler" 1>&2
 exit 1
