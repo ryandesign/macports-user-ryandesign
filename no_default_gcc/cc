@@ -3,18 +3,18 @@
 
 PROG=$(basename "$0")
 case "$PROG" in
-	cc)
-		NEWPROG=gcc
+	gcc)
+		VAR=cc
 		;;
-	c++)
-		NEWPROG=g++
+	c++|g++)
+		VAR=cxx
 		;;
 	*)
-		NEWPROG="$PROG"
+		VAR="$PROG"
 		;;
 esac
 
 echo "$PROG $@" 1>&2
-echo "$PROG: Error: You should be using /usr/bin/$NEWPROG-*:" 1>&2
+echo "$PROG: Error: You should be using \${configure.$VAR}" 1>&2
 echo "See http://trac.macports.org/wiki/UsingTheRightCompiler" 1>&2
 exit 1
