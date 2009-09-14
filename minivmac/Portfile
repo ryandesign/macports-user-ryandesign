@@ -8,6 +8,7 @@ version                 3.0.4
 revision                1
 categories              emulators aqua
 maintainers             ryandesign
+license                 GPLv2
 homepage                http://minivmac.sourceforge.net/
 use_zip                 yes
 platforms               macosx
