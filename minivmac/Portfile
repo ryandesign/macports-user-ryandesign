@@ -285,6 +285,6 @@ proc my_get_variation {} {
     return ${name}-${version}_${revision}-${my_variation_machine}-${my_target}
 }
 
-livecheck.check         regex
+livecheck.type          regex
 livecheck.url           ${homepage}download.html
 livecheck.regex         ${name}-(\[0-9.\]+)\\.src
