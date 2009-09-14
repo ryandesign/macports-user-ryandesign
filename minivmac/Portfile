@@ -73,7 +73,7 @@ checksums \
         sha1    bf37fde76dfd9d4ed35526954c149566d761c2a6 \
         rmd160  08788cbcca023ea9a0713ecec4781c35aa5a9185
 
-depends_build \
+depends_extract \
     port:macutil \
     bin:expect:expect
 
