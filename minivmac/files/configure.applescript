@@ -1,4 +1,3 @@
-#!/usr/bin/osascript
 -- $Id$
 
 on run

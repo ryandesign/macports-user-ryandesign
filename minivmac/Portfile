@@ -152,7 +152,8 @@ pre-configure {
 }
 
 configure.dir ${workpath}
-configure.cmd ${workpath}/configure.applescript
+configure.cmd           osascript
+configure.pre_args      ${workpath}/configure.applescript
 
 post-configure {
     # Get the build product.
