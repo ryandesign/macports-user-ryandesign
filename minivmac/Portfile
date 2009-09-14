@@ -41,6 +41,7 @@ set my_system_disk_container_distfile       ${my_system_disk_container}.bin
 
 distfiles \
     ${my_src_distfile}:minivmac \
+    ${my_bootstrap_distfile}:minivmac \
     ${my_icons_distfile}:minivmac \
     ${my_autoquit_distfile}:minivmac \
     ${my_system_disk_container_distfile}:apple
