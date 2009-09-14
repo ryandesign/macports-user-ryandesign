@@ -29,11 +29,11 @@ master_sites \
 
 set my_src                                  ${distname}.src
 set my_src_distfile                         ${my_src}.zip
-set my_bootstrap_version                    3.0.4
+set my_bootstrap_version                    3.1.2
 set my_bootstrap                            "Mini vMac.app"
 set my_bootstrap_distfile                   ${name}-${my_bootstrap_version}-umch.bin.tgz
-set my_autoquit                             autquit7-1.1.0
-set my_autoquit_distfile                    ${my_autoquit}.zip
+set my_clipin                               clipin-1.1.0
+set my_clipin_distfile                      ${my_clipin}.zip
 set my_icons                                icnsosx-1.0.0
 set my_icons_distfile                       ${my_icons}.zip
 set my_system_disk_container                Z-System_7.0.1.smi
@@ -43,13 +43,13 @@ distfiles \
     ${my_src_distfile}:minivmac \
     ${my_bootstrap_distfile}:minivmac \
     ${my_icons_distfile}:minivmac \
-    ${my_autoquit_distfile}:minivmac \
+    ${my_clipin_distfile}:minivmac \
     ${my_system_disk_container_distfile}:apple
 
 extract.only \
     ${my_src_distfile} \
     ${my_icons_distfile} \
-    ${my_autoquit_distfile}
+    ${my_clipin_distfile}
 
 checksums \
     ${my_src_distfile} \
@@ -57,17 +57,17 @@ checksums \
         sha1    ff99aa72da0868a5306631f0d06ae190cbd2a03a \
         rmd160  b8f1f5269d21835ff3e9e428da12a7b6c224e60e \
     ${my_bootstrap_distfile} \
-        md5     298565ec1ccfe6876768156aaf5f76a0 \
-        sha1    34212dedb1cfb744e6ca8124693f2f6e40094833 \
-        rmd160  042eacfb9ec853589d661c86ffb99d509061eb0f \
+        md5     53239cda5f1827fcc00d9254ee1ee9e0 \
+        sha1    d6c16c541d72241cabafcbb94eec7c198e8b1670 \
+        rmd160  f3925e194c59f704f6fac391609ccc72dd12c718 \
     ${my_icons_distfile} \
         md5     2af006506de7549be14f94317918d59a \
         sha1    4ef79bb56b988fedfeb82a8b6cafd8066f5bbab2 \
         rmd160  cef6d7d7578464538d0042b0d98379ae7f18fab7 \
-    ${my_autoquit_distfile} \
-        md5     eebe87a27d6db8e8f247f0fffe0f2bd5 \
-        sha1    8199e1da12d01fc210ae1eaa50f794e5b8c479c1 \
-        rmd160  f493a59fd637caa8a7937fbefaf6ebdf4a07c7f5 \
+    ${my_clipin_distfile} \
+        md5     e094de97d1c6c214a80fb74895124c3e \
+        sha1    725f622ad6681c77e7f9f4a64d05ac1d6a103beb \
+        rmd160  5699b56c8db62b2568c8de88b6d419180b1fb73d \
     ${my_system_disk_container_distfile} \
         md5     5e7b4c0ce13e65546eb795c35879751a \
         sha1    bf37fde76dfd9d4ed35526954c149566d761c2a6 \
@@ -115,95 +115,55 @@ pre-fetch {
 post-extract {
     system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_distfile}"
     
-    xinstall -W ${filespath} attach.exp demacbinary.sh ${workpath}
+    xinstall -W ${filespath} attach.exp configure.applescript demacbinary.sh ${workpath}
     
     system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${workpath}"
     
     file mkdir ${my_mnvm_dat}
     ln -s ${my_appdir}/${romfile} ${my_mnvm_dat}
     
-    # Copy the Disk Tools and Tidbits images from the container image.
+    # Copy the Disk Tools image from the container image.
     set my_system_disk_container_mount [my_attach_disk_image ${workpath}/${my_system_disk_container} 0]
-    file copy "${my_system_disk_container_mount}/Disk Tools.image" ${workpath}/startup.img
-    file copy "${my_system_disk_container_mount}/Tidbits.image" ${workpath}/tidbits.img
+    file copy "${my_system_disk_container_mount}/Disk Tools.image" "${workpath}/Disk Tools.dsk"
     my_detach_disk_image ${my_system_disk_container_mount}
     
     # The disk image mounter likes images to have the .img extension.
-    file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/src.img
-    file rename ${workpath}/${my_autoquit}/${my_autoquit}.dsk ${workpath}/autoquit.img
-    
-    # Mount the startup disk and make room on it for our things.
-    set my_startup_disk_mount [my_attach_disk_image ${workpath}/startup.img 1]
-    file delete "${my_startup_disk_mount}/Apple HD SC Setup" "${my_startup_disk_mount}/Disk First Aid"
-    
-    # Copy autoquit to the startup disk and make it open at startup.
-    # Need to use ditto to preserve the resource fork.
-    set my_autoquit_disk_mount [my_attach_disk_image ${workpath}/autoquit.img 0]
-    set my_startup_disk_autoquit_dir "${my_startup_disk_mount}/autoquit"
-    file mkdir "${my_startup_disk_autoquit_dir}"
-    system "ditto --rsrc ${my_autoquit_disk_mount}/AutQuit7 ${my_startup_disk_autoquit_dir}"
-    my_detach_disk_image ${my_autoquit_disk_mount}
-    my_make_alias "${my_startup_disk_autoquit_dir}/AutQuit7" "${my_startup_disk_mount}/System Folder/Startup Items"
-    
-    # Mount the source disk.
-    set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 1]
-    
-    # Copy TeachText to the source disk. (No room on the startup disk.)
-    set my_tidbits_disk_mount [my_attach_disk_image ${workpath}/tidbits.img 0]
-    system "ditto --rsrc ${my_tidbits_disk_mount}/TeachText ${my_src_disk_mount}"
-    my_detach_disk_image ${my_tidbits_disk_mount}
-    
-    # Force a rebuild of the Desktop files, both to add info about TeachText and
-    # to remove that of Apple HD SC Setup and Disk First Aid (to make more room).
-    file delete ${my_startup_disk_mount}/Desktop ${my_src_disk_mount}/Desktop
-    
-    # Create an empty options file so we can make an alias to it.
-    set my_options_file_id [open ${my_src_disk_mount}/${my_options_file} "w"]
-    close ${my_options_file_id}
-    system "/Developer/Tools/SetFile -c ttxt -t TEXT ${my_src_disk_mount}/${my_options_file}"
-    
-    # Have autoquit launch the build system. If there's an alias "app" in the same directory,
-    # autoquit will open it. If there's also an alias "doc" in the same directory, autoquit
-    # will open the document "doc" into the application "app".
-    my_make_alias "${my_src_disk_mount}/Build" "${my_startup_disk_autoquit_dir}/app"
-    # The build system doesn't support reading text files yet.
-#   my_make_alias "${my_src_disk_mount}/${my_options_file}" "${my_startup_disk_autoquit_dir}/doc"
-    my_make_alias "${my_src_disk_mount}/${my_options_file}" "${my_startup_disk_mount}/System Folder/Startup Items"
-    
-    # Unmount disk images.
-    my_detach_disk_image ${my_startup_disk_mount}
-    my_detach_disk_image ${my_src_disk_mount}
+    file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/${my_src}/${my_src}.img
     
     # Mini vMac looks for disks named disk1.dsk through disk3.dsk and automounts them.
-    file rename "${workpath}/startup.img" "${my_mnvm_dat}/disk1.dsk"
+    ln -s "${workpath}/Disk Tools.dsk" "${my_mnvm_dat}/disk1.dsk"
+    ln -s ${workpath}/${my_src}/${my_src}.img "${my_mnvm_dat}/disk2.dsk"
+    ln -s ${workpath}/${my_clipin}/${my_clipin}.dsk "${my_mnvm_dat}/disk3.dsk"
+    
+    # Allow the Build program to write its output to the source disk.
+    file attributes ${workpath}/${my_src}/${my_src}.img -permissions 0777
 }
 
-configure {
-    # Write our options file.
+pre-configure {
+    # Copy our options to the clipboard.
     set my_variation [my_get_variation]
     set my_options "${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}"
-    set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 1]
-    set my_options_file_id [open ${my_src_disk_mount}/${my_options_file} "w"]
-    puts -nonewline ${my_options_file_id} ${my_options}
-    close ${my_options_file_id}
-    my_detach_disk_image ${my_src_disk_mount}
+    system "echo '${my_options}' | pbcopy"
     
-    # Move the source disk where Mini vMac will find it.
-    file rename "${workpath}/src.img" "${my_mnvm_dat}/disk2.dsk"
-    
-    # Run the build system.
-    system "'${workpath}/${my_bootstrap}/Contents/MacOS/minivmac'"
-    
-    # Give the source disk image the .img extension to appease the disk image mounter.
-    file rename "${my_mnvm_dat}/disk2.dsk" "${workpath}/src.img"
-    
+    # Launch Mini vMac.
+    system "open '${workpath}/${my_bootstrap}'"
+}
+
+configure.dir ${workpath}
+configure.cmd ${workpath}/configure.applescript
+
+post-configure {
     # Get the build product.
-    set my_src_disk_mount [my_attach_disk_image ${workpath}/src.img 1]
+    set my_variation [my_get_variation]
+    set my_src_disk_mount [my_attach_disk_image ${workpath}/${my_src}/${my_src}.img 0]
     if {[file exists ${my_src_disk_mount}/output/${my_variation}]} {
         file copy ${my_src_disk_mount}/output/${my_variation} ${workpath}
-        file delete -force ${my_src_disk_mount}/output/${my_variation}
     }
     my_detach_disk_image ${my_src_disk_mount}
+    
+    # Remove references to SDKs -- the 10.4u SDK is not installed by default on 10.6
+    # and even if you install it manually it does not work here.
+    reinplace -E {s|-isysroot /Developer/SDKs/[^ ]+||g} ${workpath}/${my_variation}/Makefile
 }
 
 pre-build {
@@ -265,19 +225,6 @@ proc my_attach_disk_image {disk_image allow_writing} {
 proc my_detach_disk_image {mountpoint} {
     system "hdiutil detach ${mountpoint} -force"
     file delete -force ${mountpoint}
-}
-
-proc my_make_alias {src dst} {
-    set dst_is_dir [file isdirectory "${dst}"]
-    if {${dst_is_dir}} {
-        set dst_dir "${dst}"
-    } else {
-        set dst_dir "[file dirname ${dst}]"
-    }
-    system "osascript -e 'set src to POSIX file \"${src}\"' -e 'set dst_dir to POSIX file \"${dst_dir}\"' -e 'tell app \"Finder\" to make new alias file at dst_dir to src' -e 'return'"
-    if {!${dst_is_dir}} {
-        file rename "[file join ${dst_dir} [file tail ${src}]]" "${dst}"
-    }
 }
 
 proc my_get_variation {} {
