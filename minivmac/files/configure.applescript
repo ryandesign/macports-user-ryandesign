@@ -16,17 +16,10 @@ on run
 	
 	delay 1 -- wait for system software to finish starting up
 	
-	--my menu_file_close_all() -- close all Finder windows
-	
-	--my key_code(8) -- "C" -- select the ClipIn disk's icon
-	--my menu_file_open() -- open it
 	my key_code(22) -- "6" -- select the 6-ClipIn program
 	my menu_file_open() -- open it -- it auto-quits
 	my menu_file_close() -- close Finder window
-	--my menu_file_put_away() -- eject the ClipIn disk
 	
-	--my key_code(46) -- "M" -- select the minivmac disk's icon
-	--my menu_file_open() -- open it
 	my key_code(11) -- "B" -- select the Build program
 	my menu_file_open() -- open it
 	my menu_edit_paste() -- paste the clipboard contents into the window
@@ -71,11 +64,6 @@ on menu_file_close()
 	my key_code_with_modifiers(13, {command down}) -- "Command-W"
 	delay 0.5 -- wait for zoomrects to draw
 end menu_file_close
-
-on menu_file_close_all()
-	my key_code_with_modifiers(13, {command down, option down}) -- "Command-Option-W"
-	delay 0.5 -- wait for zoomrects to draw
-end menu_file_close_all
 
 on menu_file_put_away()
 	my key_code_with_modifiers(16, {command down}) -- "Command-Y"
