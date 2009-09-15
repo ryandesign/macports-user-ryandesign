@@ -4,7 +4,6 @@ on run
 	delay 4 -- wait for Mini vMac to start launching
 	
 	activate application "Mini vMac"
-	
 	tell application "System Events"
 		tell process "Mini vMac"
 			key down control -- open Mini vMac control menu
@@ -28,6 +27,7 @@ on run
 	my menu_file_close() -- close Finder window
 	my menu_file_put_away() -- eject the minivmac disk
 	
+	activate application "Mini vMac"
 	tell application "System Events"
 		tell process "Mini vMac"
 			key down control -- open Mini vMac control menu
@@ -47,6 +47,7 @@ end key_code
 -- but the system software being used on the emulated machine is using
 -- the US English keyboard layout.
 on key_code_with_modifiers(key_code, key_modifiers)
+	activate application "Mini vMac"
 	tell application "System Events"
 		tell process "Mini vMac"
 			delay 0.3
