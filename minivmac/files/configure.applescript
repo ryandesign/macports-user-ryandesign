@@ -1,7 +1,7 @@
 -- $Id$
 
 on run
-	delay 4 -- wait for Mini vMac to start launching
+	delay 2 -- wait for Mini vMac to start launching
 	
 	activate application "Mini vMac"
 	tell application "System Events"
@@ -9,11 +9,13 @@ on run
 			key down control -- open Mini vMac control menu
 			my key_code(1) -- "S" -- speed submenu
 			my key_code(0) -- "A" -- as fast as possible
+			my key_code(1) -- "S" -- speed submenu
+			my key_code(11) -- "B" -- run in background too
 			key up control -- close Mini vMac control menu
 		end tell
 	end tell
 	
-	delay 1 -- wait for system software to finish starting up
+	delay 2 -- wait for system software to finish starting up
 	
 	my key_code(22) -- "6" -- select the 6-ClipIn program
 	my menu_file_open() -- open it -- it auto-quits
