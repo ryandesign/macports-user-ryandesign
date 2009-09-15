@@ -27,7 +27,7 @@ long_description \
 
 master_sites \
     sourceforge:${name}:minivmac \
-    http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-International/Macintosh/System/Full_Installs/:apple
+    http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Macintosh/System/Older_System/System_7.0.x/:apple
 
 set my_src                                  ${distname}.src
 set my_src_distfile                         ${my_src}.zip
@@ -38,7 +38,7 @@ set my_clipin                               clipin-1.1.0
 set my_clipin_distfile                      ${my_clipin}.zip
 set my_icons                                icnsosx-1.0.0
 set my_icons_distfile                       ${my_icons}.zip
-set my_system_disk_container                Z-System_7.0.1.smi
+set my_system_disk_container                System_7.0.1.smi
 set my_system_disk_container_distfile       ${my_system_disk_container}.bin
 
 distfiles \
@@ -71,9 +71,9 @@ checksums \
         sha1    725f622ad6681c77e7f9f4a64d05ac1d6a103beb \
         rmd160  5699b56c8db62b2568c8de88b6d419180b1fb73d \
     ${my_system_disk_container_distfile} \
-        md5     5e7b4c0ce13e65546eb795c35879751a \
-        sha1    bf37fde76dfd9d4ed35526954c149566d761c2a6 \
-        rmd160  08788cbcca023ea9a0713ecec4781c35aa5a9185
+        md5     8a4776350b15b5a516cdf7dd18e27290 \
+        sha1    d4c8b8653de9c7a9b2594dd6126ec7120e3e2e9e \
+        rmd160  89fc3780c9c5d575a8da4068dc810c1f56c70211
 
 depends_extract \
     port:macutil \
