@@ -115,11 +115,11 @@ pre-fetch {
 }
 
 post-extract {
-    system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_distfile}"
+    my_system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_distfile}"
     
     xinstall -W ${filespath} attach.exp configure.applescript demacbinary.sh ${workpath}
     
-    system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${workpath}"
+    my_system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${workpath}"
     
     file mkdir ${my_mnvm_dat}
     ln -s ${my_appdir}/${romfile} ${my_mnvm_dat}
@@ -145,10 +145,10 @@ pre-configure {
     # Copy our options to the clipboard.
     set my_variation [my_get_variation]
     set my_options "${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}"
-    system "echo '${my_options}' | pbcopy"
+    my_system "echo '${my_options}' | pbcopy"
     
     # Launch Mini vMac.
-    system "open '${workpath}/${my_bootstrap}'"
+    my_system "open '${workpath}/${my_bootstrap}'"
 }
 
 configure.dir ${workpath}
@@ -221,18 +221,23 @@ proc my_attach_disk_image {disk_image allow_writing} {
     set mountpoint [exec mktemp -d -q -t ${name}]
     # Use this expect script instead of using hdiutil directly, because the
     # system disk image has a license agreement we must agree to.
-    system "${workpath}/attach.exp '${disk_image}' '${mountpoint}' '${allow_writing}'"
+    my_system "${workpath}/attach.exp '${disk_image}' '${mountpoint}' '${allow_writing}'"
     return ${mountpoint}
 }
 
 proc my_detach_disk_image {mountpoint} {
-    system "hdiutil detach ${mountpoint} -force"
+    my_system "hdiutil detach ${mountpoint} -force"
     file delete -force ${mountpoint}
 }
 
 proc my_get_variation {} {
     global name version revision my_variation_machine my_target
     return ${name}-${version}_${revision}-${my_variation_machine}-${my_target}
+}
+
+proc my_system {cmd} {
+     ui_debug ${cmd}
+     system ${cmd}
 }
 
 livecheck.type          regex
