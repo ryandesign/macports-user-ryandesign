@@ -125,7 +125,7 @@ post-extract {
     ln -s ${my_appdir}/${romfile} ${my_mnvm_dat}
     
     # Copy the Disk Tools image from the container image.
-    set my_system_disk_container_mount [my_attach_disk_image ${workpath}/${my_system_disk_container} 0]
+    set my_system_disk_container_mount [my_attach_disk_image ${workpath}/${my_system_disk_container}]
     file copy "${my_system_disk_container_mount}/Disk Tools.image" "${workpath}/Disk Tools.dsk"
     my_detach_disk_image ${my_system_disk_container_mount}
     
@@ -158,7 +158,7 @@ configure.pre_args      ${workpath}/configure.applescript
 post-configure {
     # Get the build product.
     set my_variation [my_get_variation]
-    set my_src_disk_mount [my_attach_disk_image ${workpath}/${my_src}/${my_src}.img 0]
+    set my_src_disk_mount [my_attach_disk_image ${workpath}/${my_src}/${my_src}.img]
     if {[file exists ${my_src_disk_mount}/output/${my_variation}]} {
         file copy ${my_src_disk_mount}/output/${my_variation} ${workpath}
     }
@@ -216,12 +216,12 @@ variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a 
     set romfile_model "Macintosh SE"
 }
 
-proc my_attach_disk_image {disk_image allow_writing} {
+proc my_attach_disk_image {disk_image} {
     global name workpath
     set mountpoint [exec mktemp -d -q -t ${name}]
     # Use this expect script instead of using hdiutil directly, because the
     # system disk image has a license agreement we must agree to.
-    my_system "${workpath}/attach.exp '${disk_image}' '${mountpoint}' '${allow_writing}'"
+    my_system "${workpath}/attach.exp '${disk_image}' '${mountpoint}'"
     return ${mountpoint}
 }
 

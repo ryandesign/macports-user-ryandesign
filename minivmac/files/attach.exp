@@ -1,12 +1,6 @@
 #!/usr/bin/env expect --
 
-if {[lindex $argv 2]} {
-	set flag "-readwrite"
-} else {
-	set flag "-readonly"
-}
-
-spawn hdiutil attach "[lindex $argv 0]" -mountpoint "[lindex $argv 1]" -private -nobrowse -noautoopen -noautofsck -noverify $flag
+spawn hdiutil attach "[lindex $argv 0]" -mountpoint "[lindex $argv 1]" -private -nobrowse -noautoopen -noautofsck -noverify -readonly
 
 expect {
 	"Software License" {
