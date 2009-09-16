@@ -115,13 +115,19 @@ pre-fetch {
 }
 
 post-extract {
+    # Extract the bootstrap version of Mini vMac.
     my_system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_distfile}"
     
+    # Copy the scripts we need.
     xinstall -W ${filespath} attach.exp configure.applescript demacbinary.sh ${workpath}
     
+    # Decode the system disk container image.
     my_system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${workpath}"
     
+    # Make the data directory, where Mini vMac looks for the files it needs.
     file mkdir ${my_mnvm_dat}
+    
+    # Symlink the ROM file into the data directory.
     ln -s ${my_appdir}/${romfile} ${my_mnvm_dat}
     
     # Copy the Disk Tools image from the container image.
@@ -129,21 +135,25 @@ post-extract {
     file copy "${my_system_disk_container_mount}/Disk Tools.image" "${workpath}/Disk Tools.dsk"
     my_detach_disk_image ${my_system_disk_container_mount}
     
-    # The disk image mounter likes images to have the .img extension.
+    # Use the .img extension for the source disk image so that we can mount it on Mac OS X later.
     file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/${my_src}/${my_src}.img
     
-    # Mini vMac looks for disks named disk1.dsk through disk3.dsk and automounts them.
+    # Symlink the disk images into the data directory with sequentially-numbered
+    # names so Mini vMac will find them and automatically mount them.
     ln -s "${workpath}/Disk Tools.dsk" "${my_mnvm_dat}/disk1.dsk"
     ln -s ${workpath}/${my_src}/${my_src}.img "${my_mnvm_dat}/disk2.dsk"
     ln -s ${workpath}/${my_clipin}/${my_clipin}.dsk "${my_mnvm_dat}/disk3.dsk"
     
-    # Allow the Build program to write its output to the source disk.
+    # Unrestrict the permissions on the source disk image so the Build program
+    # can write its output to it.
     file attributes ${workpath}/${my_src}/${my_src}.img -permissions 0777
 }
 
 pre-configure {
-    # Copy our options to the clipboard.
     set my_variation [my_get_variation]
+    
+    # Copy the configuration options to the clipboard. The script run later
+    # with osascript will paste them into the Build program.
     set my_options "${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}"
     my_system "echo '${my_options}' | pbcopy"
     
@@ -156,8 +166,9 @@ configure.cmd           osascript
 configure.pre_args      ${workpath}/configure.applescript
 
 post-configure {
-    # Get the build product.
     set my_variation [my_get_variation]
+    
+    # Get the configured source code.
     set my_src_disk_mount [my_attach_disk_image ${workpath}/${my_src}/${my_src}.img]
     if {[file exists ${my_src_disk_mount}/output/${my_variation}]} {
         file copy ${my_src_disk_mount}/output/${my_variation} ${workpath}
@@ -179,6 +190,8 @@ pre-build {
 
 post-build {
     set my_variation [my_get_variation]
+    
+    # Install the prettier icons.
     eval xinstall -m 644 [glob ${workpath}/${my_icons}/icons/*.icns] ${workpath}/${my_variation}/minivmac.app/Contents/Resources
 }
 
@@ -219,6 +232,7 @@ variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a 
     set romfile_model "Macintosh SE"
 }
 
+# Mounts a disk image.
 proc my_attach_disk_image {disk_image} {
     global name workpath
     set mountpoint [exec mktemp -d -q -t ${name}]
@@ -228,6 +242,7 @@ proc my_attach_disk_image {disk_image} {
     return ${mountpoint}
 }
 
+# Unmounts a disk image.
 proc my_detach_disk_image {mountpoint} {
     my_system "hdiutil detach ${mountpoint} -force"
     file delete -force ${mountpoint}
