@@ -113,30 +113,33 @@ pre-fetch {
     }
 }
 
+worksrcdir              stuff
+extract.mkdir           yes
+
 post-extract {
     # Copy the scripts we need.
-    xinstall -W ${filespath} attach.exp configure.applescript demacbinary.sh ${workpath}
+    xinstall -W ${filespath} attach.exp configure.applescript demacbinary.sh ${worksrcpath}
     
     # Decode the system disk container image.
-    my_system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${workpath}"
+    my_system "${worksrcpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${worksrcpath}"
     
     # Copy the Disk Tools image from the container image.
-    set my_system_disk_container_mount [my_attach_disk_image ${workpath}/${my_system_disk_container}]
-    file copy "${my_system_disk_container_mount}/Disk Tools.image" "${workpath}/Disk Tools.dsk"
+    set my_system_disk_container_mount [my_attach_disk_image ${worksrcpath}/${my_system_disk_container}]
+    file copy "${my_system_disk_container_mount}/Disk Tools.image" "${worksrcpath}/Disk Tools.dsk"
     my_detach_disk_image ${my_system_disk_container_mount}
     
     # Use the .img extension for the source disk image so that we can mount it on Mac OS X later.
-    file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/${my_src}/${my_src}.img
+    file rename ${worksrcpath}/${my_src}/${my_src}.dsk ${worksrcpath}/${my_src}/${my_src}.img
     
     # Unrestrict the permissions on the source disk image so the Build program
     # can write its output to it.
-    file attributes ${workpath}/${my_src}/${my_src}.img -permissions 0777
+    file attributes ${worksrcpath}/${my_src}/${my_src}.img -permissions 0777
     
     # Extract the bootstrap version of Mini vMac.
-    my_system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_distfile}"
+    my_system "tar -x -z -C ${worksrcpath} -f ${distpath}/${my_bootstrap_distfile}"
     
     # Make the data directory, where Mini vMac looks for the files it needs.
-    set my_mnvm_dat "${workpath}/${my_bootstrap}/Contents/mnvm_dat"
+    set my_mnvm_dat "${worksrcpath}/${my_bootstrap}/Contents/mnvm_dat"
     file mkdir ${my_mnvm_dat}
     
     # Symlink the ROM file into the data directory.
@@ -144,9 +147,9 @@ post-extract {
     
     # Symlink the disk images into the data directory with sequentially-numbered
     # names so Mini vMac will find them and automatically mount them.
-    ln -s "${workpath}/Disk Tools.dsk" "${my_mnvm_dat}/disk1.dsk"
-    ln -s ${workpath}/${my_src}/${my_src}.img "${my_mnvm_dat}/disk2.dsk"
-    ln -s ${workpath}/${my_clipin}/${my_clipin}.dsk "${my_mnvm_dat}/disk3.dsk"
+    ln -s "${worksrcpath}/Disk Tools.dsk" "${my_mnvm_dat}/disk1.dsk"
+    ln -s ${worksrcpath}/${my_src}/${my_src}.img "${my_mnvm_dat}/disk2.dsk"
+    ln -s ${worksrcpath}/${my_clipin}/${my_clipin}.dsk "${my_mnvm_dat}/disk3.dsk"
 }
 
 pre-configure {
@@ -158,18 +161,17 @@ pre-configure {
     my_system "echo '${my_options}' | pbcopy"
     
     # Launch Mini vMac.
-    my_system "open '${workpath}/${my_bootstrap}'"
+    my_system "open '${worksrcpath}/${my_bootstrap}'"
 }
 
-configure.dir ${workpath}
 configure.cmd           osascript
-configure.pre_args      ${workpath}/configure.applescript
+configure.pre_args      configure.applescript
 
 post-configure {
     set my_variation [my_get_variation]
     
     # Get the configured source code.
-    set my_src_disk_mount [my_attach_disk_image ${workpath}/${my_src}/${my_src}.img]
+    set my_src_disk_mount [my_attach_disk_image ${worksrcpath}/${my_src}/${my_src}.img]
     if {[file exists ${my_src_disk_mount}/output/${my_variation}]} {
         file copy ${my_src_disk_mount}/output/${my_variation} ${workpath}
     }
@@ -192,7 +194,7 @@ post-build {
     set my_variation [my_get_variation]
     
     # Install the prettier icons.
-    eval xinstall -m 644 [glob ${workpath}/${my_icons}/icons/*.icns] ${workpath}/${my_variation}/minivmac.app/Contents/Resources
+    eval xinstall -m 644 [glob ${worksrcpath}/${my_icons}/icons/*.icns] ${workpath}/${my_variation}/minivmac.app/Contents/Resources
 }
 
 destroot {
@@ -234,11 +236,11 @@ variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a 
 
 # Mounts a disk image.
 proc my_attach_disk_image {disk_image} {
-    global name workpath
+    global name worksrcpath
     set mountpoint [exec mktemp -d -q -t ${name}]
     # Use this expect script instead of using hdiutil directly, because the
     # system disk image has a license agreement we must agree to.
-    my_system "${workpath}/attach.exp '${disk_image}' '${mountpoint}'"
+    my_system "${worksrcpath}/attach.exp '${disk_image}' '${mountpoint}'"
     return ${mountpoint}
 }
 
