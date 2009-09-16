@@ -85,7 +85,6 @@ depends_extract \
 set my_appdir           "${applications_dir}/Mini vMac"
 set romfile             vMac.ROM
 set romfile_model       "Macintosh Plus or 512Ke"
-set my_options_file     options.txt
 set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
 set my_target           ""
 set my_machine          Plus
