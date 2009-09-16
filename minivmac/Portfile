@@ -82,7 +82,6 @@ depends_extract \
 set my_appdir           "${applications_dir}/Mini vMac"
 set romfile             vMac.ROM
 set romfile_model       "Macintosh Plus or 512Ke"
-set my_mnvm_dat         "${workpath}/${my_bootstrap}/Contents/mnvm_dat"
 set my_options_file     options.txt
 set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
 set my_target           ""
@@ -115,20 +114,11 @@ pre-fetch {
 }
 
 post-extract {
-    # Extract the bootstrap version of Mini vMac.
-    my_system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_distfile}"
-    
     # Copy the scripts we need.
     xinstall -W ${filespath} attach.exp configure.applescript demacbinary.sh ${workpath}
     
     # Decode the system disk container image.
     my_system "${workpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${workpath}"
-    
-    # Make the data directory, where Mini vMac looks for the files it needs.
-    file mkdir ${my_mnvm_dat}
-    
-    # Symlink the ROM file into the data directory.
-    ln -s ${my_appdir}/${romfile} ${my_mnvm_dat}
     
     # Copy the Disk Tools image from the container image.
     set my_system_disk_container_mount [my_attach_disk_image ${workpath}/${my_system_disk_container}]
@@ -138,15 +128,25 @@ post-extract {
     # Use the .img extension for the source disk image so that we can mount it on Mac OS X later.
     file rename ${workpath}/${my_src}/${my_src}.dsk ${workpath}/${my_src}/${my_src}.img
     
+    # Unrestrict the permissions on the source disk image so the Build program
+    # can write its output to it.
+    file attributes ${workpath}/${my_src}/${my_src}.img -permissions 0777
+    
+    # Extract the bootstrap version of Mini vMac.
+    my_system "tar -x -z -C ${workpath} -f ${distpath}/${my_bootstrap_distfile}"
+    
+    # Make the data directory, where Mini vMac looks for the files it needs.
+    set my_mnvm_dat "${workpath}/${my_bootstrap}/Contents/mnvm_dat"
+    file mkdir ${my_mnvm_dat}
+    
+    # Symlink the ROM file into the data directory.
+    ln -s ${my_appdir}/${romfile} ${my_mnvm_dat}
+    
     # Symlink the disk images into the data directory with sequentially-numbered
     # names so Mini vMac will find them and automatically mount them.
     ln -s "${workpath}/Disk Tools.dsk" "${my_mnvm_dat}/disk1.dsk"
     ln -s ${workpath}/${my_src}/${my_src}.img "${my_mnvm_dat}/disk2.dsk"
     ln -s ${workpath}/${my_clipin}/${my_clipin}.dsk "${my_mnvm_dat}/disk3.dsk"
-    
-    # Unrestrict the permissions on the source disk image so the Build program
-    # can write its output to it.
-    file attributes ${workpath}/${my_src}/${my_src}.img -permissions 0777
 }
 
 pre-configure {
