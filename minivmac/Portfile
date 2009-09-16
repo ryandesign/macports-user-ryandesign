@@ -164,6 +164,9 @@ post-configure {
     }
     my_detach_disk_image ${my_src_disk_mount}
     
+    # Use the right compiler.
+    reinplace "s|gcc|${configure.cc}|g" ${workpath}/${my_variation}/Makefile
+    
     # Remove references to SDKs -- the 10.4u SDK is not installed by default on 10.6
     # and even if you install it manually it does not work here.
     reinplace -E {s|-isysroot /Developer/SDKs/[^ ]+||g} ${workpath}/${my_variation}/Makefile
