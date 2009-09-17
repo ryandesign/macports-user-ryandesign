@@ -1,6 +1,15 @@
 -- $Id$
 
-on run
+global number_of_variations
+
+on run argv
+	set save_delims to text item delimiters of AppleScript
+	set text item delimiters of AppleScript to " "
+	set configure_args to argv as string
+	set text item delimiters of AppleScript to ";"
+	set number_of_variations to count of every text item of configure_args
+	set text item delimiters of AppleScript to save_delims
+	
 	delay 2 -- wait for Mini vMac to start launching
 	
 	activate application "Mini vMac"
@@ -18,7 +27,8 @@ on run
 	delay 2 -- wait for system software to finish starting up
 	
 	my key_code(22) -- "6" -- select the 6-ClipIn program
-	my menu_file_open() -- open it -- it auto-quits
+	set the clipboard to configure_args -- copy the configure args to the clipboard
+	my menu_file_open() -- open ClipIn, transferring the clipboard into the emulated machine; ClipIn auto-quits
 	my menu_file_close() -- close Finder window
 	
 	my key_code(11) -- "B" -- select the Build program
@@ -75,7 +85,7 @@ end menu_file_put_away
 
 on menu_file_go()
 	my key_code_with_modifiers(5, {command down}) -- "Command-G"
-	delay 0.5 -- wait for configuration to run
+	delay 0.5 * number_of_variations -- wait for configuration to run
 end menu_file_go
 
 on menu_file_quit()

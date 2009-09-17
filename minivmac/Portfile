@@ -156,13 +156,9 @@ post-extract {
 
 pre-configure {
     set my_variation [my_get_variation]
+    configure.args ${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}
     
-    # Copy the configuration options to the clipboard. The script run later
-    # with osascript will paste them into the Build program.
-    set my_options "${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}"
-    my_system "echo '${my_options}' | pbcopy"
-    
-    # Launch Mini vMac.
+    # Launch Mini vMac so the configure script can talk to it.
     my_system "open '${worksrcpath}/${my_bootstrap}'"
 }
 
