@@ -1,6 +1,6 @@
 -- $Id$
 
-global number_of_variations
+global configuration_delay
 
 on run argv
 	set save_delims to text item delimiters of AppleScript
@@ -9,6 +9,12 @@ on run argv
 	set text item delimiters of AppleScript to ";"
 	set number_of_variations to count of every text item of configure_args
 	set text item delimiters of AppleScript to save_delims
+	
+	-- Base the delay for the configuration run on the processor speed.
+	-- The multiplier was chosen based on observations of a 2.2-GHz
+	-- MacBook Pro and a 466-MHz Power Mac G4.
+	set cpu_mhz to (system attribute "pclk") / 1000000
+	set configuration_delay to 1400 * number_of_variations / cpu_mhz
 	
 	delay 2 -- wait for Mini vMac to start launching
 	
@@ -48,6 +54,8 @@ on run argv
 			key up control -- close Mini vMac control menu
 		end tell
 	end tell
+	
+	return "Variations: " & number_of_variations & ". CPU speed: " & (round cpu_mhz rounding up) & " MHz. Configuration delay: " & ((round configuration_delay * 100 rounding up) / 100) & " seconds."
 end run
 
 on key_code(key_code)
@@ -85,7 +93,7 @@ end menu_file_put_away
 
 on menu_file_go()
 	my key_code_with_modifiers(5, {command down}) -- "Command-G"
-	delay 0.5 * number_of_variations -- wait for configuration to run
+	delay configuration_delay -- wait for configuration to run
 end menu_file_go
 
 on menu_file_quit()
