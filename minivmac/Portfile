@@ -184,7 +184,7 @@ configure.pre_args      configure.applescript
 post-configure {
     set my_variation_dirs ""
     set my_src_disk_mount [my_attach_disk_image ${worksrcpath}/${my_src}/${my_src}.img]
-    foreach my_variation_dir [glob -type d -tails -directory ${my_src_disk_mount}/output *] {
+    foreach my_variation_dir [glob -nocomplain -type d -tails -directory ${my_src_disk_mount}/output *] {
         set my_variation_dirs "${my_variation_dirs} ${my_variation_dir}"
         
         # Get the configured source code.
