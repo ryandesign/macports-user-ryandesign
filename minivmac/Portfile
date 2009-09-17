@@ -14,7 +14,6 @@ homepage                http://minivmac.sourceforge.net/
 use_zip                 yes
 platforms               macosx
 universal_variant       no
-build.target
 use_parallel_build      yes
 dist_subdir             ${my_name}
 
@@ -87,8 +86,9 @@ set romfile             vMac.ROM
 set romfile_model       "Macintosh Plus or 512Ke"
 set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
 set my_target           ""
-set my_machine          Plus
-set my_variation_machine mac[string tolower ${my_machine}]
+
+options my_variations
+default my_variations   {}
 
 platform powerpc {
     set my_target mach
@@ -118,9 +118,15 @@ pre-fetch {
 worksrcdir              stuff
 extract.mkdir           yes
 
+build.dir               ${workpath}/variations
+
 post-extract {
+    # Make the build directory.
+    file mkdir ${build.dir}
+    
     # Copy the scripts we need.
     xinstall -W ${filespath} attach.exp configure.applescript demacbinary.sh ${worksrcpath}
+    xinstall -W ${filespath} Makefile.in ${build.dir}/Makefile
     
     # Decode the system disk container image.
     my_system "${worksrcpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${worksrcpath}"
@@ -155,8 +161,18 @@ post-extract {
 }
 
 pre-configure {
-    set my_variation [my_get_variation]
-    configure.args ${my_base_options} -t ${my_target} -m ${my_machine} -n ${my_variation}
+    set i 0
+    foreach {my_machine my_variation_options} ${my_variations} {
+        if {${i} > 0} {
+            configure.args-append {\;}
+        }
+        configure.args-append \
+            ${my_base_options} \
+            -t ${my_target} \
+            ${my_variation_options} \
+            -n ${version}_${revision}-[string tolower ${my_machine}]-${my_target}
+        incr i
+    }
     
     # Launch Mini vMac so the configure script can talk to it.
     my_system "open '${worksrcpath}/${my_bootstrap}'"
@@ -166,40 +182,39 @@ configure.cmd           osascript
 configure.pre_args      configure.applescript
 
 post-configure {
-    set my_variation [my_get_variation]
-    
-    # Get the configured source code.
+    set my_variation_dirs ""
     set my_src_disk_mount [my_attach_disk_image ${worksrcpath}/${my_src}/${my_src}.img]
-    if {[file exists ${my_src_disk_mount}/output/${my_variation}]} {
-        file copy ${my_src_disk_mount}/output/${my_variation} ${workpath}
+    foreach my_variation_dir [glob -type d -tails -directory ${my_src_disk_mount}/output *] {
+        set my_variation_dirs "${my_variation_dirs} ${my_variation_dir}"
+        
+        # Get the configured source code.
+        file copy ${my_src_disk_mount}/output/${my_variation_dir} ${build.dir}
+        
+        # Use the right compiler.
+        reinplace "s|gcc|${configure.cc}|g" ${build.dir}/${my_variation_dir}/Makefile
+        
+        # Remove references to SDKs -- the 10.4u SDK is not installed by default on 10.6
+        # and even if you install it manually it does not work here.
+        reinplace -E {s|-isysroot /Developer/SDKs/[^ ]+||g} ${build.dir}/${my_variation_dir}/Makefile
     }
     my_detach_disk_image ${my_src_disk_mount}
-    
-    # Use the right compiler.
-    reinplace "s|gcc|${configure.cc}|g" ${workpath}/${my_variation}/Makefile
-    
-    # Remove references to SDKs -- the 10.4u SDK is not installed by default on 10.6
-    # and even if you install it manually it does not work here.
-    reinplace -E {s|-isysroot /Developer/SDKs/[^ ]+||g} ${workpath}/${my_variation}/Makefile
-}
-
-pre-build {
-    set my_variation [my_get_variation]
-    build.dir ${workpath}/${my_variation}
+    reinplace "s|@SUBDIRS@|${my_variation_dirs}|" ${build.dir}/Makefile
 }
 
 post-build {
-    set my_variation [my_get_variation]
-    
-    # Install the prettier icons.
-    eval xinstall -m 644 [glob ${worksrcpath}/${my_icons}/icons/*.icns] ${workpath}/${my_variation}/minivmac.app/Contents/Resources
+    foreach my_variation_dir [glob -type d -tails -directory ${build.dir} *] {
+        # Install the prettier icons.
+        eval xinstall -m 644 [glob ${worksrcpath}/${my_icons}/icons/*.icns] ${build.dir}/${my_variation_dir}/minivmac.app/Contents/Resources
+    }
 }
 
 destroot {
-    set my_variation [my_get_variation]
     xinstall -d ${destroot}${my_appdir}
-    file copy ${workpath}/${my_variation}/minivmac.app \
-        ${destroot}${my_appdir}/Mini\ vMac\ ${my_machine}.app
+    foreach {my_machine my_variation_options} ${my_variations} {
+        set my_variation_dir ${version}_${revision}-[string tolower ${my_machine}]-${my_target}
+        file copy ${build.dir}/${my_variation_dir}/minivmac.app \
+            "${destroot}${my_appdir}/Mini vMac ${my_machine}.app"
+    }
 }
 
 if { ![variant_isset mac128k] && ![variant_isset mac512k] && ![variant_isset mac512ke] && ![variant_isset macse] } {
@@ -207,29 +222,23 @@ if { ![variant_isset mac128k] && ![variant_isset mac512k] && ![variant_isset mac
 }
 
 variant mac128k conflicts mac512k mac512ke macplus macse description {Emulate a Macintosh with 128K RAM and 2 drives} {
-    patchfiles-append patch-CNFGGLOB.h-mac128k.diff
-    set romfile Mac128K.ROM
-    set romfile_model "Macintosh 128K or 512K"
+    my_variations-append {128K} {-m 128K}
 }
 
 variant mac512k conflicts mac128k mac512ke macplus macse description {Emulate a Macintosh 512K with 512K RAM and 2 drives} {
-    patchfiles-append patch-CNFGGLOB.h-mac512k.diff
-    set romfile Mac128K.ROM
-    set romfile_model "Macintosh 128K or 512K"
+    my_variations-append {512K} {-m 512K}
 }
 
 variant mac512ke conflicts mac128k mac512k macplus macse description {Emulate a Macintosh 512Ke with 512K RAM and 6 drives} {
-    patchfiles-append patch-CNFGGLOB.h-mac512ke.diff
+    my_variations-append {512Ke} {-m 512Ke}
 }
 
 variant macplus conflicts mac128k mac512k mac512ke macse description {Emulate a Macintosh Plus with 4 MB RAM and 6 drives} {
-    # Mac Plus emulation is the default so we don't need to do anything here
+    my_variations-append {Plus} {-m Plus}
 }
 
 variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a Macintosh SE with 4 MB RAM and 6 drives} {
-    patchfiles-append patch-CNFGGLOB.h-macse.diff
-    set romfile MacSE.ROM
-    set romfile_model "Macintosh SE"
+    my_variations-append {SE} {-m SE}
 }
 
 # Mounts a disk image.
@@ -246,11 +255,6 @@ proc my_attach_disk_image {disk_image} {
 proc my_detach_disk_image {mountpoint} {
     my_system "hdiutil detach ${mountpoint} -force"
     file delete -force ${mountpoint}
-}
-
-proc my_get_variation {} {
-    global my_name version revision my_variation_machine my_target
-    return ${my_name}-${version}_${revision}-${my_variation_machine}-${my_target}
 }
 
 proc my_system {cmd} {
