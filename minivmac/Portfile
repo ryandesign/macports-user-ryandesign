@@ -6,7 +6,7 @@ name                    minivmac
 conflicts               minivmac-devel
 set my_name             minivmac
 version                 3.0.4
-revision                1
+revision                2
 categories              emulators aqua
 maintainers             ryandesign
 license                 GPLv2
@@ -201,14 +201,32 @@ post-configure {
     reinplace "s|@SUBDIRS@|${my_variation_dirs}|" ${build.dir}/Makefile
 }
 
+set my_share_dir        ${prefix}/share/${my_name}
+
 post-build {
+    # To save space, keep only a single copy of the Resources directory.
+    set i 0
     foreach my_variation_dir [glob -type d -tails -directory ${build.dir} *] {
-        # Install the prettier icons.
-        eval xinstall -m 644 [glob ${worksrcpath}/${my_icons}/icons/*.icns] ${build.dir}/${my_variation_dir}/minivmac.app/Contents/Resources
+        set my_resources_dir ${build.dir}/${my_variation_dir}/minivmac.app/Contents/Resources
+        if {0 == ${i}} {
+            move ${my_resources_dir} ${build.dir}
+        } else {
+            delete ${my_resources_dir}
+        }
+        ln -s ${my_share_dir}/Resources ${my_resources_dir}
+        incr i
     }
+    
+    # Install the prettier icons.
+    eval xinstall -m 644 [glob ${worksrcpath}/${my_icons}/icons/*.icns] ${build.dir}/Resources
 }
 
 destroot {
+    # Install the global Resources directory.
+    xinstall -d ${destroot}${my_share_dir}
+    copy ${build.dir}/Resources ${destroot}${my_share_dir}
+    
+    # Install the programs.
     xinstall -d ${destroot}${my_appdir}
     foreach {my_machine my_variation_options} ${my_variations} {
         set my_variation_dir ${version}_${revision}-[string tolower ${my_machine}]-${my_target}
