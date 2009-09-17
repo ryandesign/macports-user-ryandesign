@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# $Id$
+
 INFILE="$1"
 OUT="$2"
 
