@@ -197,6 +197,13 @@ post-configure {
     }
     my_detach_disk_image ${my_src_disk_mount}
     reinplace "s|@SUBDIRS@|${my_variation_dirs}|" ${build.dir}/Makefile
+    
+    # If no variation directoriess were produced by configuration, either the flags we
+    # passed in were bad, or the automation script got out of sync with the emulator;
+    # if the latter, the delays in configure.applescript may need to be adjusted.
+    if {"" == ${my_variation_dirs}} {
+        return -code error "configuration failed!"
+    }
 }
 
 set my_share_dir        ${prefix}/share/${my_name}
