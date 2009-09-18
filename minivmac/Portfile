@@ -33,9 +33,7 @@ master_sites \
 distname                                    ${my_name}-${version}
 set my_src                                  ${distname}.src
 set my_src_distfile                         ${my_src}.zip
-set my_bootstrap_version                    3.1.2
-set my_bootstrap                            "Mini vMac.app"
-set my_bootstrap_distfile                   ${my_name}-${my_bootstrap_version}-umch.bin.tgz
+set my_bootstrap_distfile                   ${my_name}-3.1.2-umch.bin.tgz
 set my_clipin                               clipin-1.1.0
 set my_clipin_distfile                      ${my_clipin}.zip
 set my_icons                                icnsosx-1.0.0
@@ -82,6 +80,7 @@ depends_extract \
     bin:expect:expect
 
 set my_appdir           "${applications_dir}/Mini vMac"
+set my_bootstrap_app    "Mini vMac.app"
 set romfile             vMac.ROM
 set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex -im 1"
 set my_target           ""
@@ -146,7 +145,7 @@ post-extract {
     my_system "tar -x -z -C ${worksrcpath} -f ${distpath}/${my_bootstrap_distfile}"
     
     # Make the data directory, where Mini vMac looks for the files it needs.
-    set my_mnvm_dat "${worksrcpath}/${my_bootstrap}/Contents/mnvm_dat"
+    set my_mnvm_dat "${worksrcpath}/${my_bootstrap_app}/Contents/mnvm_dat"
     file mkdir ${my_mnvm_dat}
     
     # Symlink the ROM file into the data directory.
@@ -174,7 +173,7 @@ pre-configure {
     }
     
     # Launch Mini vMac so the configure script can talk to it.
-    my_system "open '${worksrcpath}/${my_bootstrap}'"
+    my_system "open '${worksrcpath}/${my_bootstrap_app}'"
 }
 
 configure.cmd           osascript
