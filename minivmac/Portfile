@@ -170,7 +170,7 @@ pre-configure {
             ${my_base_options} \
             -t ${my_target} \
             ${my_variation_options} \
-            -n ${version}_${revision}-[string tolower ${my_machine}]-${my_target}
+            -n ${version}_${revision}-[strsed [string tolower ${my_machine}] {g/[^a-z0-9_-]//}]-${my_target}
         incr i
     }
     
@@ -229,7 +229,7 @@ destroot {
     # Install the programs.
     xinstall -d ${destroot}${my_appdir}
     foreach {my_machine my_variation_options} ${my_variations} {
-        set my_variation_dir ${version}_${revision}-[string tolower ${my_machine}]-${my_target}
+        set my_variation_dir ${version}_${revision}-[strsed [string tolower ${my_machine}] {g/[^a-z0-9_-]//}]-${my_target}
         file copy ${build.dir}/${my_variation_dir}/minivmac.app \
             "${destroot}${my_appdir}/Mini vMac ${my_machine}.app"
     }
