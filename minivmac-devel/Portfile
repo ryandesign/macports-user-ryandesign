@@ -90,7 +90,7 @@ depends_extract \
 set my_app_dir          "${applications_dir}/Mini vMac"
 set my_bootstrap_app    "Mini vMac.app"
 set my_rom_file         vMac.ROM
-set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex -im 1"
+set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
 set my_target           ""
 
 options my_variations
@@ -250,23 +250,23 @@ if { ![variant_isset mac128k] && ![variant_isset mac512k] && ![variant_isset mac
     default_variants +macplus
 }
 
-variant mac128k conflicts mac512k mac512ke macplus macse description {Emulate a Macintosh with 128K RAM and 2 drives} {
+variant mac128k description {Emulate a Macintosh with 128K RAM and 2 drives} {
     my_variations-append {128K} {-m 128K}
 }
 
-variant mac512k conflicts mac128k mac512ke macplus macse description {Emulate a Macintosh 512K with 512K RAM and 2 drives} {
+variant mac512k description {Emulate a Macintosh 512K with 512K RAM and 2 drives} {
     my_variations-append {512K} {-m 128K -mem 512K}
 }
 
-variant mac512ke conflicts mac128k mac512k macplus macse description {Emulate a Macintosh 512Ke with 512K RAM and 6 drives} {
+variant mac512ke description {Emulate a Macintosh 512Ke with 512K RAM and 6 drives} {
     my_variations-append {512Ke} {-m 512Ke}
 }
 
-variant macplus conflicts mac128k mac512k mac512ke macse description {Emulate a Macintosh Plus with 4 MB RAM and 6 drives} {
-    my_variations-append {Plus} {-m Plus}
+variant macplus description {Emulate a Macintosh Plus with 4 MB RAM and 6 drives} {
+    my_variations-append {Plus} {-m Plus -im 1}
 }
 
-variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a Macintosh SE with 4 MB RAM and 6 drives} {
+variant macse description {Emulate a Macintosh SE with 4 MB RAM and 6 drives} {
     my_variations-append {SE} {-m SE}
 }
 
