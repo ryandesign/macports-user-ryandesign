@@ -33,6 +33,8 @@ distname                                    ${my_name}-${version}
 set my_src                                  ${distname}.src
 set my_src_distfile                         ${my_src}.zip
 set my_bootstrap_distfile                   ${my_name}-3.1.2-umch.bin.tgz
+set my_blanks                               blanks
+set my_blanks_distfile                      ${my_blanks}-0.2.0.zip
 set my_clipin                               clipin-1.1.0
 set my_clipin_distfile                      ${my_clipin}.zip
 set my_icons                                icnsosx-1.0.0
@@ -45,11 +47,13 @@ distfiles \
     ${my_bootstrap_distfile}:minivmac \
     ${my_icons_distfile}:minivmac \
     ${my_clipin_distfile}:minivmac \
+    ${my_blanks_distfile}:minivmac \
     ${my_system_disk_container_distfile}:apple
 
 extract.only \
     ${my_src_distfile} \
     ${my_icons_distfile} \
+    ${my_blanks_distfile} \
     ${my_clipin_distfile}
 
 checksums \
@@ -69,6 +73,10 @@ checksums \
         md5     e094de97d1c6c214a80fb74895124c3e \
         sha1    725f622ad6681c77e7f9f4a64d05ac1d6a103beb \
         rmd160  5699b56c8db62b2568c8de88b6d419180b1fb73d \
+    ${my_blanks_distfile} \
+        md5     b16321d0d78048d5ec9b635f4f86b19c \
+        sha1    9b8d7e77bd05633709907f8806d976279d7a20b7 \
+        rmd160  a0784c17c5a5ca2e159762fb836c1c800762b213 \
     ${my_system_disk_container_distfile} \
         md5     8a4776350b15b5a516cdf7dd18e27290 \
         sha1    d4c8b8653de9c7a9b2594dd6126ec7120e3e2e9e \
@@ -76,6 +84,7 @@ checksums \
 
 depends_extract \
     port:macutil \
+    port:bsdiff \
     bin:expect:expect
 
 set my_app_dir          "${applications_dir}/Mini vMac"
@@ -128,17 +137,21 @@ post-extract {
     # Decode the system disk container image.
     my_system "${worksrcpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${worksrcpath}"
     
-    # Copy the Disk Tools image from the container image.
+    # Copy the Disk Tools image from the container image. The binary patchfile applied with bspatch
+    # places an alias of the output disk at System Folder:Preferences:Gryphel:Build:output.
     set my_system_disk_container_mount [my_attach_disk_image ${worksrcpath}/${my_system_disk_container}]
-    file copy "${my_system_disk_container_mount}/Disk Tools.image" "${worksrcpath}/Disk Tools.dsk"
+    my_system "bspatch '${my_system_disk_container_mount}/Disk Tools.image' '${worksrcpath}/Disk Tools.dsk' '${filespath}/Disk Tools.dsk.bsdiff'"
     my_detach_disk_image ${my_system_disk_container_mount}
     
-    # Use the .img extension for the source disk image so that we can mount it on Mac OS X later.
-    file rename ${worksrcpath}/${my_src}/${my_src}.dsk ${worksrcpath}/${my_src}/${my_src}.img
+    # Get a large empty disk image to store the output.
+    my_system "unzip -q ${worksrcpath}/${my_blanks}/hfs24M.zip -d ${worksrcpath}"
     
-    # Unrestrict the permissions on the source disk image so the Build program
+    # Use the .img extension for the output disk image so that we can mount it on Mac OS X later.
+    file rename ${worksrcpath}/hfs24M.DSK ${worksrcpath}/output.img
+    
+    # Unrestrict the permissions on the output disk image so the Build program
     # can write its output to it.
-    file attributes ${worksrcpath}/${my_src}/${my_src}.img -permissions 0777
+    file attributes ${worksrcpath}/output.img -permissions 0777
     
     # Extract the bootstrap version of Mini vMac.
     my_system "tar -x -z -C ${worksrcpath} -f ${distpath}/${my_bootstrap_distfile}"
@@ -153,8 +166,9 @@ post-extract {
     # Symlink the disk images into the data directory with sequentially-numbered
     # names so Mini vMac will find them and automatically mount them.
     ln -s "${worksrcpath}/Disk Tools.dsk" "${my_mnvm_dat}/disk1.dsk"
-    ln -s ${worksrcpath}/${my_src}/${my_src}.img "${my_mnvm_dat}/disk2.dsk"
+    ln -s ${worksrcpath}/${my_src}/${my_src}.dsk "${my_mnvm_dat}/disk2.dsk"
     ln -s ${worksrcpath}/${my_clipin}/${my_clipin}.dsk "${my_mnvm_dat}/disk3.dsk"
+    ln -s ${worksrcpath}/output.img "${my_mnvm_dat}/disk4.dsk"
 }
 
 pre-configure {
@@ -180,12 +194,12 @@ configure.pre_args      configure.applescript
 
 post-configure {
     set my_variation_dirs ""
-    set my_src_disk_mount [my_attach_disk_image ${worksrcpath}/${my_src}/${my_src}.img]
-    foreach my_variation_dir [glob -nocomplain -type d -tails -directory ${my_src_disk_mount}/output *] {
+    set my_output_disk_mount [my_attach_disk_image ${worksrcpath}/output.img]
+    foreach my_variation_dir [glob -nocomplain -type d -tails -directory ${my_output_disk_mount} *] {
         set my_variation_dirs "${my_variation_dirs} ${my_variation_dir}"
         
         # Get the configured source code.
-        file copy ${my_src_disk_mount}/output/${my_variation_dir} ${build.dir}
+        file copy ${my_output_disk_mount}/${my_variation_dir} ${build.dir}
         
         # Use the right compiler.
         reinplace "s|gcc|${configure.cc}|g" ${build.dir}/${my_variation_dir}/Makefile
@@ -194,7 +208,7 @@ post-configure {
         # and even if you install it manually it does not work here.
         reinplace -E {s|-isysroot /Developer/SDKs/[^ ]+||g} ${build.dir}/${my_variation_dir}/Makefile
     }
-    my_detach_disk_image ${my_src_disk_mount}
+    my_detach_disk_image ${my_output_disk_mount}
     reinplace "s|@SUBDIRS@|${my_variation_dirs}|" ${build.dir}/Makefile
 }
 

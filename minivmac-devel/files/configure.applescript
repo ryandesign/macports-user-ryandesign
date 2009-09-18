@@ -43,7 +43,9 @@ on run argv
 	my menu_file_go() -- do the build
 	my menu_file_quit() -- quit
 	my menu_file_close() -- close Finder window
-	my menu_file_put_away() -- eject the minivmac disk
+	
+	my key_code(32) -- "U" -- select the untitled output disk
+	my menu_file_put_away() -- eject the output disk
 	
 	activate application "Mini vMac"
 	tell application "System Events"
