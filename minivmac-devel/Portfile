@@ -270,6 +270,14 @@ variant macse description {Emulate a Macintosh SE with 4 MB RAM and 6 drives} {
     my_variations-append {SE} {-m SE}
 }
 
+variant macsefdhd description {Emulate a Macintosh SE FDHD with 4 MB RAM and 6 drives} {
+    my_variations-append {SE FDHD} {-m SEFDHD}
+}
+
+variant macclassic description {Emulate a Macintosh Classic with 4 MB RAM and 6 drives} {
+    my_variations-append {Classic} {-m Classic}
+}
+
 # Mounts a disk image.
 proc my_attach_disk_image {disk_image} {
     global my_name worksrcpath
