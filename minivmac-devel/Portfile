@@ -103,6 +103,12 @@ my_variations           {128K}      {-m 128K} \
                         {SE FDHD}   {-m SEFDHD} \
                         {Classic}   {-m Classic}
 
+variant unsupported description {Also build unfinished Macintosh II and IIx emulators} {
+    my_variations-append \
+                        {II}        {-m II -mem 8M -hres 800 -vres 600 -depth 3} \
+                        {IIx}       {-m IIx -mem 8M -hres 800 -vres 600 -depth 3}
+}
+
 platform powerpc {
     set my_target mach
 }
