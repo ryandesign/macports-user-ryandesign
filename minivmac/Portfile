@@ -6,7 +6,7 @@ name                    minivmac
 conflicts               minivmac-devel
 set my_name             minivmac
 version                 3.0.4
-revision                2
+revision                3
 categories              emulators aqua
 maintainers             ryandesign
 license                 GPLv2
@@ -84,7 +84,7 @@ depends_extract \
 set my_appdir           "${applications_dir}/Mini vMac"
 set romfile             vMac.ROM
 set romfile_model       "Macintosh Plus or 512Ke"
-set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex"
+set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/ -cl -eol unx -nex -im 1"
 set my_target           ""
 
 options my_variations
