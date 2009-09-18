@@ -6,6 +6,7 @@ name                    minivmac-devel
 conflicts               minivmac
 set my_name             minivmac
 version                 3.1.2
+revision                1
 categories              emulators aqua
 maintainers             ryandesign
 license                 GPLv2
@@ -94,7 +95,13 @@ set my_base_options     "-maintainer MacPorts -homepage http://www.macports.org/
 set my_target           ""
 
 options my_variations
-default my_variations   {}
+my_variations           {128K}      {-m 128K} \
+                        {512K}      {-m 128K -mem 512K} \
+                        {512Ke}     {-m 512Ke} \
+                        {Plus}      {-m Plus -im 1} \
+                        {SE}        {-m SE} \
+                        {SE FDHD}   {-m SEFDHD} \
+                        {Classic}   {-m Classic}
 
 platform powerpc {
     set my_target mach
@@ -244,38 +251,6 @@ destroot {
         file copy ${build.dir}/${my_variation_dir}/minivmac.app \
             "${destroot}${my_app_dir}/Mini vMac ${my_machine}.app"
     }
-}
-
-if { ![variant_isset mac128k] && ![variant_isset mac512k] && ![variant_isset mac512ke] && ![variant_isset macse] } {
-    default_variants +macplus
-}
-
-variant mac128k description {Emulate a Macintosh with 128K RAM and 2 drives} {
-    my_variations-append {128K} {-m 128K}
-}
-
-variant mac512k description {Emulate a Macintosh 512K with 512K RAM and 2 drives} {
-    my_variations-append {512K} {-m 128K -mem 512K}
-}
-
-variant mac512ke description {Emulate a Macintosh 512Ke with 512K RAM and 6 drives} {
-    my_variations-append {512Ke} {-m 512Ke}
-}
-
-variant macplus description {Emulate a Macintosh Plus with 4 MB RAM and 6 drives} {
-    my_variations-append {Plus} {-m Plus -im 1}
-}
-
-variant macse description {Emulate a Macintosh SE with 4 MB RAM and 6 drives} {
-    my_variations-append {SE} {-m SE}
-}
-
-variant macsefdhd description {Emulate a Macintosh SE FDHD with 4 MB RAM and 6 drives} {
-    my_variations-append {SE FDHD} {-m SEFDHD}
-}
-
-variant macclassic description {Emulate a Macintosh Classic with 4 MB RAM and 6 drives} {
-    my_variations-append {Classic} {-m Classic}
 }
 
 # Mounts a disk image.
