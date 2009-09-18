@@ -116,18 +116,9 @@ pre-fetch {
 worksrcdir              stuff
 extract.mkdir           yes
 
-build.dir               ${workpath}/variations
-
 post-extract {
-    # Make the build directory.
-    file mkdir ${build.dir}
-    
-    # Copy the scripts we need.
-    xinstall -W ${filespath} attach.exp configure.applescript demacbinary.sh ${worksrcpath}
-    xinstall -W ${filespath} Makefile.in ${build.dir}/Makefile
-    
     # Decode the system disk container image.
-    my_system "${worksrcpath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${worksrcpath}"
+    my_system "sh ${filespath}/demacbinary.sh ${distpath}/${my_system_disk_container_distfile} ${worksrcpath}"
     
     # Copy the Disk Tools image from the container image.
     set my_system_disk_container_mount [my_attach_disk_image ${worksrcpath}/${my_system_disk_container}]
@@ -177,9 +168,12 @@ pre-configure {
 }
 
 configure.cmd           osascript
-configure.pre_args      configure.applescript
+configure.pre_args      ${filespath}/configure.applescript
+
+build.dir               ${workpath}/variations
 
 post-configure {
+    file mkdir ${build.dir}
     set my_variation_dirs ""
     set my_src_disk_mount [my_attach_disk_image ${worksrcpath}/${my_src}/${my_src}.img]
     foreach my_variation_dir [glob -nocomplain -type d -tails -directory ${my_src_disk_mount}/output *] {
@@ -196,6 +190,9 @@ post-configure {
         reinplace -E {s|-isysroot /Developer/SDKs/[^ ]+||g} ${build.dir}/${my_variation_dir}/Makefile
     }
     my_detach_disk_image ${my_src_disk_mount}
+    
+    # Set up the global Makefile.
+    xinstall ${filespath}/Makefile.in ${build.dir}/Makefile
     reinplace "s|@SUBDIRS@|${my_variation_dirs}|" ${build.dir}/Makefile
     
     # If no variation directoriess were produced by configuration, either the flags we
@@ -266,11 +263,11 @@ variant macse conflicts mac128k mac512k mac512ke macplus description {Emulate a 
 
 # Mounts a disk image.
 proc my_attach_disk_image {disk_image} {
-    global my_name worksrcpath
+    global my_name filespath
     set mountpoint [mkdtemp "/tmp/${my_name}.XXXXXXXX"]
     # Use this expect script instead of using hdiutil directly, because the
     # system disk image has a license agreement we must agree to.
-    my_system "${worksrcpath}/attach.exp '${disk_image}' '${mountpoint}'"
+    my_system "expect ${filespath}/attach.exp '${disk_image}' '${mountpoint}'"
     return ${mountpoint}
 }
 
