@@ -1,0 +1,117 @@
+# $Id$
+
+PortSystem                  1.0
+
+name                        mystonline-crossover
+set my_name                 mystonline
+version                     2010
+platforms                   darwin
+categories                  games x11
+maintainers                 ryandesign
+homepage                    http://mystonline.com/
+dist_subdir                 ${my_name}
+master_sites                https://account.mystonline.com/download/
+set installer_exe           MOULInstaller.exe
+distfiles                   ${installer_exe}
+extract.mkdir               yes
+extract.only
+
+description                 Myst Online: URU Live Again
+
+long_description            ${description} (MO:ULagain) running via the Crossover Games version of Wine
+
+checksums                   md5     6e33d2f380698d0f552b7a5a1e3634a3 \
+                            sha1    5221729d62b9c9578c3b2da5042a2fd69443b05b \
+                            rmd160  29ff37d4768105061e96b517d7f4d99b406accef
+
+depends_build               port:winetricks
+
+depends_run                 port:wine-crossover-games
+
+set libexec_dir             ${prefix}/libexec/${name}
+set share_dir               ${prefix}/share/${my_name}
+set bootstrap_dir           ${share_dir}/bootstrap
+set assets_dir              ${share_dir}/data
+set wineprefix              ${share_dir}/crossover
+set app_name                "Myst Online (Crossover)"
+set app_package             ${applications_dir}/${app_name}.app
+
+post-extract {
+    xinstall -m 644 -W ${filespath} MOUL.sh chown-data.c ${worksrcpath}
+}
+
+post-patch {
+    reinplace "s|@INSTALLER@|${bootstrap_dir}/${installer_exe}|g" ${worksrcpath}/MOUL.sh
+    reinplace "s|@LAUNCHER@|${assets_dir}/UruLauncher.exe|g" ${worksrcpath}/MOUL.sh
+    reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/MOUL.sh
+    reinplace "s|@LIBEXEC@|${libexec_dir}|g" ${worksrcpath}/MOUL.sh
+    reinplace "s|@WINEPREFIX@|${wineprefix}|g" ${worksrcpath}/MOUL.sh ${worksrcpath}/chown-data.c
+    reinplace "s|@ASSETS@|${assets_dir}|g" ${worksrcpath}/chown-data.c
+}
+
+use_configure               no
+
+build {
+    system "WINEPREFIX=${worksrcpath}/wineprefix ${prefix}/bin/wineprefixcreate"
+    
+    if {![file exists ${distpath}/winetrickscache]} {
+        ln -s . ${distpath}/winetrickscache
+    }
+#    system "WINEPREFIX=${worksrcpath}/wineprefix HOME=${distpath} ${prefix}/bin/winetricks -q fontsmooth-rgb"
+    
+    set program_files "${worksrcpath}/wineprefix/drive_c/Program Files"
+    file mkdir ${program_files}
+    ln -s ${assets_dir} "${program_files}/Uru Live"
+    
+    system "cd ${worksrcpath} && ${configure.cc} chown-data.c -o chown-data"
+}
+
+destroot.keepdirs ${destroot}${assets_dir} \
+                  "${destroot}${wineprefix}/Program Files/Common Files"
+destroot {
+    xinstall -d ${destroot}${libexec_dir} \
+                ${destroot}${bootstrap_dir} \
+                ${destroot}${assets_dir} \
+                ${destroot}${app_package}/Contents/MacOS
+    
+    xinstall -m 4755 -W ${worksrcpath} chown-data ${destroot}${libexec_dir}
+    
+    xinstall -W ${worksrcpath} MOUL.sh ${destroot}${app_package}/Contents/MacOS/${app_name}
+    
+    xinstall -m 644 -W ${distpath} ${installer_exe} ${destroot}${bootstrap_dir}
+    
+    copy ${worksrcpath}/wineprefix ${destroot}${wineprefix}
+    
+    xinstall -d "${destroot}${wineprefix}/Program Files/Common Files"
+}
+
+notes                       This is Myst Online running via the Crossover Games version of Wine. \
+                            Peculiarities of this method of running Myst Online include: \
+                            \n\n* The first time you open Myst Online, the installer runs. Don't change the default install location. \
+                            Later, you will also be prompted to install PhysX. \
+                            \n* If you click anywhere in the updater window, the window will follow the mouse and will not go away. \
+                            \n* You cannot hold down the Command key while dragging to look around. \
+                            \n* The menubar cannot be hidden. \
+                            \n* The dock does not hide automatically. It can be hidden using the normal ways \
+                            (e.g. Apple menu > Dock > Turn hiding on) but you may also want to move the dock \
+                            to the side of the screen as otherwise it gets in the way of game play. \
+                            \n* The game's dock icon keeps bouncing longer than it should, doesn't show that \
+                            it's running even when it is, and doesn't bring the game to the front if you click it. \
+                            Accessing the dock icon's context menu doesn't let you quit the game normally, \
+                            though it does let you force-quit it. \
+                            \n* The Relto-book application icon is missing. \
+                            \n* The game starts in fullscreen mode. If in fullscreen mode you access the game's \
+                            graphics settings, you cannot return to the game\; you must force-quit. \
+                            \n* To switch between fullscreen and windowed mode, use the checkbox in the graphics settings. \
+                            \n* Intel GMA 950 integrated graphics cards are not supported. Some graphics including your avatar \
+                            will not display correctly. \
+                            \n* On Macs with NVIDIA graphics cards, Eder Kemo has graphics glitches and severe \
+                            performance problems. \
+                            \n* Sounds sometimes pop and crackle. \
+                            \n\nOther methods of running Myst Online on a Mac include the Cider version in the \
+                            mystonline-cider port, and running the game in Windows via VMware, Parallels or Boot Camp. \
+                            \n\nIf you already have the game files from a non-MacPorts installation of Myst Online, \
+                            you can copy or move them to ${assets_dir} to save some download time. \
+                            \n\nTo play Myst Online, open ${app_package}.
+
+universal_variant           no
