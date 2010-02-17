@@ -81,8 +81,7 @@ build {
     system "cd ${worksrcpath} && ${configure.cc} chown-data.c -o chown-data"
 }
 
-destroot.keepdirs ${destroot}${assets_dir} \
-                  "${destroot}${wineprefix}/Program Files/Common Files"
+destroot.keepdirs ${destroot}${assets_dir}
 destroot {
     xinstall -d ${destroot}${libexec_dir} \
                 ${destroot}${bootstrap_dir} \
@@ -95,8 +94,6 @@ destroot {
     copy ${worksrcpath}/assets ${destroot}${assets_dir}
     
     copy ${worksrcpath}/wineprefix ${destroot}${wineprefix}
-    
-    xinstall -d "${destroot}${wineprefix}/Program Files/Common Files"
 }
 
 notes                       This is Myst Online running via the Cider wrapper developed for the \

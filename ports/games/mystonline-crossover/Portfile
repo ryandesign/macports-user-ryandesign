@@ -66,8 +66,7 @@ build {
     system "cd ${worksrcpath} && ${configure.cc} chown-data.c -o chown-data"
 }
 
-destroot.keepdirs ${destroot}${assets_dir} \
-                  "${destroot}${wineprefix}/Program Files/Common Files"
+destroot.keepdirs ${destroot}${assets_dir}
 destroot {
     xinstall -d ${destroot}${libexec_dir} \
                 ${destroot}${bootstrap_dir} \
@@ -81,8 +80,6 @@ destroot {
     xinstall -m 644 -W ${distpath} ${installer_exe} ${destroot}${bootstrap_dir}
     
     copy ${worksrcpath}/wineprefix ${destroot}${wineprefix}
-    
-    xinstall -d "${destroot}${wineprefix}/Program Files/Common Files"
 }
 
 notes                       This is Myst Online running via the Crossover Games version of Wine. \
