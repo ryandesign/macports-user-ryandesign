@@ -57,7 +57,7 @@ build {
     if {![file exists ${distpath}/winetrickscache]} {
         ln -s . ${distpath}/winetrickscache
     }
-#    system "WINEPREFIX=${worksrcpath}/wineprefix HOME=${distpath} ${prefix}/bin/winetricks -q fontsmooth-rgb"
+    system "WINEPREFIX=${worksrcpath}/wineprefix HOME=${distpath} ${prefix}/bin/winetricks -q fontsmooth-rgb"
     
     set program_files "${worksrcpath}/wineprefix/drive_c/Program Files"
     file mkdir ${program_files}
