@@ -13,6 +13,22 @@ function cleanup {
 
 trap cleanup SIGHUP SIGINT SIGTERM
 
+# Set DISPLAY if it's not set (e.g. on Tiger).
+if [ -z "$DISPLAY" ]; then
+    export DISPLAY=:0.0
+    # Launch X11.app if it's not already running, preferring the MacPorts version if available.
+    if [ -z "$(ps auxww | grep /X11.app/ | grep -v grep)" ]; then
+        if [ -d "@APPLICATIONS_DIR@/X11.app" ]; then
+            open "@APPLICATIONS_DIR@/X11.app"
+        elif [ -d "/Applications/Utilities/X11.app" ]; then
+            open "/Applications/Utilities/X11.app"
+        else
+            echo "No X11.app found" 1>&2
+            exit 1
+        fi
+    fi
+fi
+
 USER=$(id -u)
 GROUP=$(id -g)
 

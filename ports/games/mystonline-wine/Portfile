@@ -5,6 +5,7 @@ PortSystem                  1.0
 name                        mystonline-wine
 set my_name                 mystonline
 version                     2010
+revision                    1
 platforms                   darwin
 categories                  games x11
 maintainers                 ryandesign
@@ -44,6 +45,7 @@ post-patch {
     reinplace "s|@INSTALLER@|${bootstrap_dir}/${installer_exe}|g" ${worksrcpath}/MOUL.sh
     reinplace "s|@LAUNCHER@|${assets_dir}/UruLauncher.exe|g" ${worksrcpath}/MOUL.sh
     reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/MOUL.sh
+    reinplace "s|@APPLICATIONS_DIR@|${applications_dir}|g" ${worksrcpath}/MOUL.sh
     reinplace "s|@LIBEXEC@|${libexec_dir}|g" ${worksrcpath}/MOUL.sh
     reinplace "s|@WINEPREFIX@|${wineprefix}|g" ${worksrcpath}/MOUL.sh ${worksrcpath}/chown-data.c
     reinplace "s|@ASSETS@|${assets_dir}|g" ${worksrcpath}/chown-data.c
