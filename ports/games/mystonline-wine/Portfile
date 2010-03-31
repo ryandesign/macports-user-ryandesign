@@ -2,7 +2,7 @@
 
 PortSystem                  1.0
 
-name                        mystonline-crossover
+name                        mystonline-wine
 set my_name                 mystonline
 version                     2010
 platforms                   darwin
@@ -18,7 +18,7 @@ extract.only
 
 description                 Myst Online: URU Live Again
 
-long_description            ${description} (MO:ULagain) running via the Crossover Games version of Wine
+long_description            ${description} (MO:ULagain) running via Wine
 
 checksums                   md5     6e33d2f380698d0f552b7a5a1e3634a3 \
                             sha1    5221729d62b9c9578c3b2da5042a2fd69443b05b \
@@ -26,14 +26,14 @@ checksums                   md5     6e33d2f380698d0f552b7a5a1e3634a3 \
 
 depends_build               port:winetricks
 
-depends_run                 port:wine-crossover-games
+depends_run                 path:bin/wine:wine-devel
 
 set libexec_dir             ${prefix}/libexec/${name}
 set share_dir               ${prefix}/share/${my_name}
 set bootstrap_dir           ${share_dir}/bootstrap
 set assets_dir              ${share_dir}/data
-set wineprefix              ${share_dir}/crossover
-set app_name                "Myst Online (Crossover)"
+set wineprefix              ${share_dir}/wine
+set app_name                "Myst Online (Wine)"
 set app_package             ${applications_dir}/${app_name}.app
 
 post-extract {
@@ -82,7 +82,7 @@ destroot {
     copy ${worksrcpath}/wineprefix ${destroot}${wineprefix}
 }
 
-notes                       This is Myst Online running via the Crossover Games version of Wine. \
+notes                       This is Myst Online running via Wine. \
                             Peculiarities of this method of running Myst Online include: \
                             \n\n* The first time you open Myst Online, the installer runs. Don't change the default install location. \
                             Later, you will also be prompted to install PhysX. \

@@ -110,8 +110,8 @@ notes                       This is Myst Online running via the Cider wrapper de
                             \n* On Macs with NVIDIA graphics cards, Eder Kemo has severe performance problems. \
                             \n* Sounds sometimes pop and crackle. \
                             \n* Several aspects of the game assume your keyboard uses the QWERTY layout. \
-                            \n\nOther methods of running Myst Online on a Mac include the Crossover Games version in the \
-                            mystonline-crossover port, and running the game in Windows via VMware, Parallels or Boot Camp. \
+                            \n\nOther methods of running Myst Online on a Mac include the Wine version in the \
+                            mystonline-wine port, and running the game in Windows via VMware, Parallels or Boot Camp. \
                             \n\nIf you already have the game files from a non-MacPorts installation of Myst Online, \
                             you can copy or move them to ${assets_dir} to save some download time. \
                             \n\nTo play Myst Online, open ${app_package}.
