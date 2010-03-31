@@ -5,6 +5,7 @@ PortSystem                  1.0
 name                        mystonline-cider
 set my_name                 mystonline
 version                     2010
+revision                    1
 platforms                   darwin
 categories                  games x11
 maintainers                 ryandesign
@@ -50,6 +51,7 @@ post-patch {
     reinplace "s|@LIBEXEC@|${libexec_dir}|g" ${worksrcpath}/MOUL.sh
     reinplace "s|@WINEPREFIX@|${wineprefix}|g" ${worksrcpath}/MOUL.sh ${worksrcpath}/chown-data.c
     reinplace "s|@ASSETS@|${assets_dir}|g" ${worksrcpath}/chown-data.c
+    reinplace "s|@APP_PACKAGE@|${app_package}|g" ${worksrcpath}/chown-data.c
 }
 
 use_configure               no
@@ -100,7 +102,6 @@ notes                       This is Myst Online running via the Cider wrapper de
                             GameTap version of Myst Online a few years ago. \
                             Peculiarities of this method of running Myst Online include: \
                             \n\n* Several icons appear and disappear in the dock while the game is starting. \
-                            \n* The game doesn't always quit itself when it's done. Often you have to force-quit it. \
                             \n* If you need to force-quit the game while in fullscreen mode, press Command-Option-Escape. \
                             \n* The game starts in fullscreen mode at 800x600 resolution. To switch to a \
                             higher resolution, use the in-game graphics settings. \

@@ -18,4 +18,4 @@ if [ ! -r "$LAUNCHER" ]; then
     cp -p "$BOOTSTRAP_LAUNCHER" "$LAUNCHER"
 fi
 
-open -a "$(dirname "$0")/../Resources/Myst Online.app"
+"$(dirname "$0")/../Resources/Myst Online.app/Contents/MacOS/cider"
