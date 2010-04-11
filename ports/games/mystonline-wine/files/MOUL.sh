@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# This script runs the game launcher (if it's already been installed)
-# or the installer (if it hasn't).
+# This script runs the game launcher, installing it if it's not already there.
 
 export PREFIX="@PREFIX@"
 export WINEPREFIX="@WINEPREFIX@"
@@ -37,18 +36,16 @@ GROUP=$(id -g)
 #fi
 
 LAUNCHER="@LAUNCHER@"
-INSTALLER="@INSTALLER@"
-if [ -r "$LAUNCHER" ]; then
-    PROGRAM="$LAUNCHER"
-else
-    PROGRAM="$INSTALLER"
+BOOTSTRAP_LAUNCHER="@BOOTSTRAP_LAUNCHER@"
+if [ ! -r "$LAUNCHER" ]; then
+    cp -p "$BOOTSTRAP_LAUNCHER" "$LAUNCHER"
 fi
 
-"$PREFIX/bin/wine" "$PROGRAM" &
+"$PREFIX/bin/wine" "$LAUNCHER"
 sleep 5
 
-# If we're running the installer, the installer will run the launcher
-# after it's done. Wait for all apps to exit before exiting this script.
+# The launcher might have downloaded and launched a new launcher.
+# Wait for all apps to exit before exiting this script.
 #"$PREFIX/bin/wineserver" -w
 SOCKET="$(printf "/tmp/.wine-$USER/server-%x-%x/socket" $(stat -f '%d %i' "$WINEPREFIX"))"
 while [ -r "$SOCKET" ]; do
