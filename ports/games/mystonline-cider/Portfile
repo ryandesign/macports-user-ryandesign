@@ -5,7 +5,7 @@ PortSystem                  1.0
 name                        mystonline-cider
 set my_name                 mystonline
 version                     2010
-revision                    1
+revision                    2
 platforms                   darwin
 categories                  games x11
 maintainers                 ryandesign
@@ -27,6 +27,8 @@ checksums                   md5     3b3b5af000b32a4415e6aa7d944083fb \
                             rmd160  c156b0edd20a691248269f6e3ab9996fddae74c8
 
 depends_extract             bin:expect:expect
+
+depends_run                 port:mystonline-bootstrap
 
 set libexec_dir             ${prefix}/libexec/${name}
 set share_dir               ${prefix}/share/${my_name}
@@ -57,13 +59,17 @@ post-patch {
 use_configure               no
 
 build {
+    # Delete the main app executable (which does nothing but launch the child app)
+    # and replace it with our script (which does that and more)
     delete "${worksrcpath}/app/Contents/MacOS/Uru Live"
     xinstall -W ${worksrcpath} MOUL.sh "${worksrcpath}/app/Contents/MacOS/Uru Live"
     
+    # Move the wine prefix and symlink it back to where the app expects it
     set transgaming_dir "${worksrcpath}/app/Contents/Resources/Myst Online.app/Contents/Resources/transgaming"
     move ${transgaming_dir} ${worksrcpath}/wineprefix
     ln -s ${wineprefix} ${transgaming_dir}
     
+    # Link "Uru Live" to our assets dir
     set program_files "${worksrcpath}/wineprefix/c_drive/Program Files"
     delete "${program_files}/Uru Live"
     ln -s ${assets_dir} "${program_files}/Uru Live"
@@ -71,22 +77,24 @@ build {
     file mkdir ${worksrcpath}/assets
     ln -s "${app_package}/Contents/Resources/Myst Online.app/Contents/Resources" ${worksrcpath}/assets/Cider
     
+    # Update the URL from which server status messages are obtained
     foreach a {Login Updater} {
         reinplace "s|support.mystonline.com/serverstatus/urulivelive.php|support.cyanworlds.com/serverstatus/moullive.php|g" \
             "${worksrcpath}/app/Contents/Resources/Myst Online.app/Contents/Resources/URU Live ${a}.app/Contents/Info.plist"
     }
     
+    # Make sure we show the updated terms and conditions
     set tos "${worksrcpath}/app/Contents/Resources/Myst Online.app/Contents/Resources/URU Live EULA.app/Contents/Resources/TOS.txt"
     delete ${tos}
     ln -s ${assets_dir}/TOS.txt ${tos}
     
+    # Build the chown wrapper program
     system "cd ${worksrcpath} && ${configure.cc} chown-data.c -o chown-data"
 }
 
-destroot.keepdirs ${destroot}${assets_dir}
 destroot {
     xinstall -d ${destroot}${libexec_dir} \
-                ${destroot}${bootstrap_dir} \
+                ${destroot}${share_dir} \
                 ${destroot}${applications_dir}
     
     xinstall -m 4755 -W ${worksrcpath} chown-data ${destroot}${libexec_dir}
@@ -98,23 +106,29 @@ destroot {
     copy ${worksrcpath}/wineprefix ${destroot}${wineprefix}
 }
 
-notes                       This is Myst Online running via the Cider wrapper developed for the \
-                            GameTap version of Myst Online a few years ago. \
+notes                       Welcome to Myst Online: Uru Live Again (MO:ULagain) \
+                            \n\n* To play Myst Online, you need an account, which you can create for free by visiting \
+                            ${homepage} and clicking Play. \
+                            \n* Myst Online automatically updates itself. \
+                            The first time you open Myst Online, it will download several gigabytes of game data. \
+                            Be patient\; this will take some time. \
+                            If you already have the game data from a non-MacPorts installation of Myst Online, \
+                            you can save time by copying or moving it into ${assets_dir} \
+                            \n\nThis version of Myst Online runs via the Cider wrapper developed for the GameTap version \
+                            of Myst Online which ran from 2007 to 2008. \
                             Peculiarities of this method of running Myst Online include: \
                             \n\n* Several icons appear and disappear in the dock while the game is starting. \
+                            \n* The game may crash (unexpectedly quit) when you quit it. \
                             \n* If you need to force-quit the game while in fullscreen mode, press Command-Option-Escape. \
                             \n* The game starts in fullscreen mode at 800x600 resolution. To switch to a \
                             higher resolution, use the in-game graphics settings. \
                             \n* To switch between fullscreen and windowed mode, press Command-Return. \
                             \n* Intel GMA 950 integrated graphics cards are not supported. Some graphics including your avatar \
                             will not display correctly. \
-                            \n* On Macs with NVIDIA graphics cards, Eder Kemo has severe performance problems. \
                             \n* Sounds sometimes pop and crackle. \
-                            \n* Several aspects of the game assume your keyboard uses the QWERTY layout. \
+                            \n* The microphone cannot be used to talk to other players, though you can hear other players talking to you. \
                             \n\nOther methods of running Myst Online on a Mac include the Wine version in the \
                             mystonline-wine port, and running the game in Windows via VMware, Parallels or Boot Camp. \
-                            \n\nIf you already have the game files from a non-MacPorts installation of Myst Online, \
-                            you can copy or move them to ${assets_dir} to save some download time. \
                             \n\nTo play Myst Online, open ${app_package}.
 
 universal_variant           no
