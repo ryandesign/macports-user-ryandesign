@@ -3,37 +3,68 @@
 PortSystem              1.0
 
 name                    openvas-libraries
-version                 2.0.4
-set download_id         618
+version                 3.0.5
+set download_id         729
 platforms               darwin
 categories              security
 maintainers             ryandesign
 homepage                http://www.openvas.org/
 master_sites            http://wald.intevation.org/frs/download.php/${download_id}
 
-checksums \
-    md5     b0d721f8d4c2f1c265841bf418311ea7 \
-    sha1    271f42118fc41ffec2d1365d618fa09e294aa4e5 \
-    rmd160  bb4702277401e657e20ccff082990f68a74f178e
-
 description \
     Open Vulnerability Assessment System libraries
 
-long_description \
-    OpenVAS is the Open Vulnerability Assessment System. This port \
-    contains the libraries used by the server component.
+long_description        OpenVAS is the Open Vulnerability Assessment System. \
+                        ${name} contains common libraries used by the other \
+                        components.
+
+checksums               md5     a11dac34c35bdebb7fc2ecf643acdbab \
+                        sha1    265970a5bc695afdf001d4528bd69d326b6eaa70 \
+                        rmd160  eaf350ebfba8b49a1c93a8b77cf4baa48b68e2e6
 
 depends_build \
+    path:bin/cmake:cmake \
     path:bin/pkg-config:pkgconfig \
+    path:bin/bison:bison \
+    path:bin/flex:flex \
+    path:bin/gsed:gsed \
     bin:grep:grep
 
 depends_lib \
     path:lib/pkgconfig/glib-2.0.pc:glib2 \
     path:bin/libgnutls-config:gnutls \
+    path:bin/gpgme-config:gpgme \
     path:bin/pcap-config:libpcap \
     path:lib/libz.dylib:zlib
 
+patchfiles              patch-hg-CMakeLists.txt.diff \
+                        patch-misc-CMakeLists.txt.diff \
+                        patch-nasl-CMakeLists.txt.diff
+
 use_parallel_build      yes
+
+universal_variant       no
+
+pre-build {
+    # http://wald.intevation.org/tracker/index.php?func=detail&aid=1233&group_id=29&atid=220
+    configure.cflags-append \
+                        -Ds6_addr32=__u6_addr.__u6_addr32 \
+                        -DBIND_8_COMPAT
+    
+    # http://wald.intevation.org/tracker/index.php?func=detail&aid=1258&group_id=29&atid=220
+    configure.ldflags-append \
+                        [exec ${prefix}/bin/pkg-config glib-2.0 --libs] \
+                        [exec ${prefix}/bin/pkg-config gnutls --libs] \
+                        [exec ${prefix}/bin/libgcrypt-config --libs] \
+                        [exec ${prefix}/bin/gpgme-config --libs] \
+                        [exec ${prefix}/bin/pcap-config --libs]
+    
+    # http://wald.intevation.org/tracker/index.php?func=detail&aid=1232&group_id=29&atid=220
+    build.args          CC=${configure.cc} \
+                        CFLAGS="[join ${configure.cflags}]" \
+                        CPPFLAGS="[join ${configure.cppflags}]" \
+                        LDFLAGS="[join ${configure.ldflags}]"
+}
 
 livecheck.type          regex
 livecheck.url           http://wald.intevation.org/frs/?group_id=29

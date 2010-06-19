@@ -1,0 +1,17 @@
+--- nasl/CMakeLists.txt.orig	2010-04-12 05:20:08.000000000 -0500
++++ nasl/CMakeLists.txt	2010-06-19 00:56:27.000000000 -0500
+@@ -214,11 +214,11 @@
+ add_library (libopenvas_hg SHARED IMPORTED)
+ add_library (libopenvas_misc SHARED IMPORTED)
+ set_property (TARGET libopenvas_misc PROPERTY
+-              IMPORTED_LOCATION ../misc/libopenvas_misc.so)
++              IMPORTED_LOCATION ../misc/libopenvas_misc.dylib)
+ set_property (TARGET libopenvas_base PROPERTY
+-              IMPORTED_LOCATION ../base/libopenvas_base.so)
++              IMPORTED_LOCATION ../base/libopenvas_base.dylib)
+ set_property (TARGET libopenvas_hg PROPERTY
+-              IMPORTED_LOCATION ../hg/libopenvas_hg.so)
++              IMPORTED_LOCATION ../hg/libopenvas_hg.dylib)
+ 
+ # Link the openvas-nasl executable
+ add_executable (openvas-nasl nasl.c)

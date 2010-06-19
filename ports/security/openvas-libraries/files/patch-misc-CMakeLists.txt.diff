@@ -1,0 +1,17 @@
+--- misc/CMakeLists.txt.orig	2010-03-24 02:43:00.000000000 -0500
++++ misc/CMakeLists.txt	2010-06-19 01:12:25.000000000 -0500
+@@ -184,8 +184,12 @@
+   add_definitions (-DONF_DIR=\\\"${OPENVAS_SYSCONF_DIR}\\\")
+ endif (OPENVAS_SYSCONF_DIR)
+ 
+-target_link_libraries (openvas_misc_static ${GLIB_LDFLAGS})
+-target_link_libraries (openvas_misc_shared ${GLIB_LDFLAGS})
++target_link_libraries (openvas_misc_static libopenvas_base ${GLIB_LDFLAGS})
++target_link_libraries (openvas_misc_shared libopenvas_base ${GLIB_LDFLAGS})
++
++add_library (libopenvas_base SHARED IMPORTED)
++set_property (TARGET libopenvas_base PROPERTY
++              IMPORTED_LOCATION ../base/libopenvas_base.dylib)
+ 
+ # install library
+ message ("-- installing libraries...")

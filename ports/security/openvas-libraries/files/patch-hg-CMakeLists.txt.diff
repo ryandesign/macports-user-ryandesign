@@ -1,0 +1,17 @@
+--- hg/CMakeLists.txt.orig	2010-03-24 02:43:00.000000000 -0500
++++ hg/CMakeLists.txt	2010-06-19 01:07:31.000000000 -0500
+@@ -163,8 +163,12 @@
+   add_definitions (-DOPENVAS_PID_DIR=\\\"${OPENVAS_PID_DIR}\\\")
+ endif (OPENVAS_PID_DIR)
+ 
+-target_link_libraries (openvas_hg_static ${GLIB_LDFLAGS})
+-target_link_libraries (openvas_hg_shared ${GLIB_LDFLAGS})
++target_link_libraries (openvas_hg_static libopenvas_misc ${GLIB_LDFLAGS} -lresolv)
++target_link_libraries (openvas_hg_shared libopenvas_misc ${GLIB_LDFLAGS} -lresolv)
++
++add_library (libopenvas_misc SHARED IMPORTED)
++set_property (TARGET libopenvas_misc PROPERTY
++              IMPORTED_LOCATION ../misc/libopenvas_misc.dylib)
+ 
+ # install library
+ message ("-- installing libraries...")
