@@ -3,36 +3,40 @@
 PortSystem              1.0
 
 name                    openvas-client
-version                 2.0.5
-set download_id         617
+version                 3.0.0
+set download_id         685
 platforms               darwin
 categories              security
 maintainers             ryandesign
 homepage                http://www.openvas.org/
 master_sites            http://wald.intevation.org/frs/download.php/${download_id}
 
-checksums \
-    md5     1ab804e599705543fb96a8c04777b46a \
-    sha1    cb157534cdbee31e54348de3fe2df73ea9490f19 \
-    rmd160  6e2b625f5c7361dfa294165976157e3777ec0359
-
 description \
     Open Vulnerability Assessment System client
 
-long_description \
-    OpenVAS is the Open Vulnerability Assessment System. This port is \
-    the client component.
+long_description        OpenVAS is the Open Vulnerability Assessment System. \
+                        ${name} is the client component.
+
+checksums               md5     c5fc0c744865ca2e6c331bab529e11a3 \
+                        sha1    1890c9813e1219efe4e72a0697f4c0271bc2670c \
+                        rmd160  47853e832b07a568e53ef3e47f5ea35c8b67a56a
 
 depends_build \
     path:bin/pkg-config:pkgconfig \
     bin:grep:grep
 
 depends_lib \
+    path:bin/libopenvas-config:openvas-libraries \
     path:bin/gdlib-config:gd2 \
     path:lib/pkgconfig/gtk+-2.0.pc:gtk2 \
     path:lib/pkgconfig/openssl.pc:openssl
 
+patchfiles              patch-uname.diff
+
 use_parallel_build      yes
+
+# openvas-libraries is not universal
+universal_variant       no
 
 livecheck.type          regex
 livecheck.url           http://wald.intevation.org/frs/?group_id=29

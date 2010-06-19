@@ -1,0 +1,33 @@
+--- openvas/Makefile	2009-10-09 17:35:59.000000000 -0500
++++ openvas/Makefile	2010-06-19 04:07:44.000000000 -0500
+@@ -14,7 +14,7 @@
+ OPENVASCLIENT=OpenVAS-Client$(EXEEXT)
+ 
+ # Add some specific Windows compile options for Cygwin
+-SYSTEM:=$(shell uname -o)
++SYSTEM:=$(shell uname -s)
+ ifeq ($(SYSTEM), Cygwin)
+ CFLAGS+=-mms-bitfields
+ LDFLAGS+=-mwindows
+--- src/gui/Makefile	2009-09-22 14:26:36.000000000 -0500
++++ src/gui/Makefile	2010-06-19 04:07:30.000000000 -0500
+@@ -34,7 +34,7 @@
+ CFLAGS+=-Wall
+ 
+ # Add some specific Windows compile options for Cygwin
+-SYSTEM:=$(shell uname -o)
++SYSTEM:=$(shell uname -s)
+ ifeq ($(SYSTEM), Cygwin)
+ CFLAGS+=-mms-bitfields
+ LDFLAGS+=-mwindows
+--- src/util/Makefile	2009-09-22 14:26:36.000000000 -0500
++++ src/util/Makefile	2010-06-19 04:07:24.000000000 -0500
+@@ -33,7 +33,7 @@
+ CFLAGS+=-Wall
+ 
+ # Add some specific Windows compile options for Cygwin
+-SYSTEM:=$(shell uname -o)
++SYSTEM:=$(shell uname -s)
+ ifeq ($(SYSTEM), Cygwin)
+ CFLAGS+=-mms-bitfields
+ LDFLAGS+=-mwindows
