@@ -1,0 +1,45 @@
+# $Id$
+
+PortSystem              1.0
+
+name                    openvas-scanner
+version                 3.0.2
+set download_id         724
+platforms               darwin
+categories              security
+maintainers             ryandesign
+homepage                http://www.openvas.org/
+master_sites            http://wald.intevation.org/frs/download.php/${download_id}
+
+description \
+    Open Vulnerability Assessment System scanner
+
+long_description        OpenVAS is the Open Vulnerability Assessment System. \
+                        ${name} is the scanner component, formerly called \
+                        the server component.
+
+checksums               md5     0fbadc838d4f21c43f1ce6c8180287e6 \
+                        sha1    088092bf6211f43bc4c7e668936087882094b58a \
+                        rmd160  34c9040c54997a4394433425af8359dc895d745b
+
+depends_build \
+    path:bin/pkg-config:pkgconfig \
+    path:bin/xmkmf:imake
+
+depends_lib \
+    path:bin/libopenvas-config:openvas-libraries \
+    path:lib/libX11.dylib:xorg-libX11
+
+patchfiles              patch-cnvts-make_world.diff
+
+# http://wald.intevation.org/tracker/index.php?func=detail&aid=1233&group_id=29&atid=220
+configure.cflags-append -Ds6_addr32=__u6_addr.__u6_addr32
+
+use_parallel_build      yes
+
+# openvas-libraries is not universal
+universal_variant       no
+
+livecheck.type          regex
+livecheck.url           http://wald.intevation.org/frs/?group_id=29
+livecheck.regex         ${name}-(\[0-9.\]+)\\.tar

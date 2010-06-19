@@ -1,0 +1,12 @@
+--- cnvts/make_world.orig	2009-06-19 06:56:24.000000000 -0500
++++ cnvts/make_world	2010-06-19 03:52:36.000000000 -0500
+@@ -3,9 +3,6 @@
+ 
+ os=`uname`
+ case "$os" in
+- Darwin)
+- 	MAKEFLAG="-f Makefile.darwin"
+-	;;
+   *)
+   	MAKEFLAG=""
+ 	;;
