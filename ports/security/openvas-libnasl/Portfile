@@ -3,40 +3,24 @@
 PortSystem              1.0
 
 name                    openvas-libnasl
-version                 2.0.2
-set download_id         619
+replaced_by             openvas-libraries
+version                 3.0.0
 platforms               darwin
 categories              security
 maintainers             ryandesign
 homepage                http://www.openvas.org/
-master_sites            http://wald.intevation.org/frs/download.php/${download_id}
-
-checksums \
-    md5     c6d4e9099b860a0dceda6c10eacc26f4 \
-    sha1    7a4342418de2a591353a4404455ca97a49d589d8 \
-    rmd160  59f583f7e91c1d7e69bd16ce4fcacccb25b49e02
+distfiles
 
 description \
     Open Vulnerability Assessment System NASL library
 
-long_description \
-    OpenVAS is the Open Vulnerability Assessment System. This port \
-    contains the Nessus Attack Scripting Language (NASL) library used \
-    by the server component.
+long_description        OpenVAS is the Open Vulnerability Assessment System. \
+                        ${name} has been merged into ${replaced_by} and is \
+                        no longer needed.
 
-depends_build \
-    path:bin/pkg-config:pkgconfig \
-    path:bin/bison:bison \
-    path:bin/gsed:gsed
+pre-configure {
+    ui_error "${name} has been merged into ${replaced_by}; please install that port instead."
+    return -code error "obsolete port"
+}
 
-depends_lib \
-    path:bin/gpgme-config:gpgme \
-    path:bin/libopenvas-config:openvas-libraries
-
-patchfiles              patch-configure.diff
-
-use_parallel_build      yes
-
-livecheck.type          regex
-livecheck.url           http://wald.intevation.org/frs/?group_id=29
-livecheck.regex         ${name}-(\[0-9.\]+)\\.tar
+livecheck.type          none
