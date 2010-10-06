@@ -6,6 +6,7 @@ PortGroup                   xcode 1.0
 
 name                        PCLauncher
 version                     0.0.1-72189
+revision                    1
 categories                  games
 maintainers                 ryandesign
 homepage                    http://plasmaclient.servegame.org/
@@ -24,6 +25,13 @@ worksrcdir                  ${name}
 depends_run                 port:PlasmaClient \
                             port:Drizzle
 
+patchfiles                  patch-PCLauncher.applescript.diff
+
 post-patch {
-    reinplace "s|/opt/local|${prefix}|g" ${worksrcpath}/PCLauncher.applescript
+    reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/PCLauncher.applescript
+}
+
+post-destroot {
+    xinstall -d ${destroot}${applications_dir}/PCLauncher.app/Contents/Resources/PlasmaClient.app/Contents/MacOS
+    ln -s ${prefix}/bin/PlasmaClient ${destroot}${applications_dir}/PCLauncher.app/Contents/Resources/PlasmaClient.app/Contents/MacOS
 }

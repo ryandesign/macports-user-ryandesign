@@ -1,0 +1,19 @@
+--- PCLauncher.applescript	(revision 72189)
++++ PCLauncher.applescript	(working copy)
+@@ -6,7 +6,7 @@
+ 
+ 
+ -- Paths
+-property gPrefix : "/opt/local"
++property gPrefix : "@PREFIX@"
+ property gDrizzle : gPrefix & "/bin/drizzle"
+ property gPlasmaClient : gPrefix & "/bin/PlasmaClient"
+ property gDataDirectory : gPrefix & "/share/mystonline/data"
+@@ -29,6 +29,7 @@
+ property gPid : 0
+ 
+ on will finish launching theObject
++	set gPlasmaClient to (resource path of main bundle) & "/PlasmaClient.app/Contents/MacOS/PlasmaClient"
+ 	make new default entry at end of default entries of user defaults with properties {name:"username", contents:""}
+ 	make new default entry at end of default entries of user defaults with properties {name:"password", contents:""}
+ end will finish launching
