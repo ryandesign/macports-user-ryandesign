@@ -1,5 +1,5 @@
---- PCLauncher.applescript	(revision 72189)
-+++ PCLauncher.applescript	(working copy)
+--- PCLauncher.applescript.orig	2010-10-06 07:46:21.000000000 -0500
++++ PCLauncher.applescript	2010-10-06 07:50:42.000000000 -0500
 @@ -6,7 +6,7 @@
  
  
@@ -7,13 +7,16 @@
 -property gPrefix : "/opt/local"
 +property gPrefix : "@PREFIX@"
  property gDrizzle : gPrefix & "/bin/drizzle"
- property gPlasmaClient : gPrefix & "/bin/PlasmaClient"
- property gDataDirectory : gPrefix & "/share/mystonline/data"
-@@ -29,6 +29,7 @@
+ property gDrizzleForDownload : gDrizzle
+ property gDrizzleForExtract : gDrizzle
+@@ -33,6 +33,10 @@
  property gPid : 0
  
  on will finish launching theObject
-+	set gPlasmaClient to (resource path of main bundle) & "/PlasmaClient.app/Contents/MacOS/PlasmaClient"
++	set gDrizzleForDownload to (resource path of main bundle) & "/PCDownloader.app/Contents/MacOS/PCDownloader"
++	set gDrizzleForExtract to (resource path of main bundle) & "/PCExtractor.app/Contents/MacOS/PCExtractor"
++	set gPlasmaClientForAuth to (resource path of main bundle) & "/PCAuthenticator.app/Contents/MacOS/PCAuthenticator"
++	set gPlasmaClientForGame to (resource path of main bundle) & "/PlasmaClient.app/Contents/MacOS/PlasmaClient"
  	make new default entry at end of default entries of user defaults with properties {name:"username", contents:""}
  	make new default entry at end of default entries of user defaults with properties {name:"password", contents:""}
  end will finish launching

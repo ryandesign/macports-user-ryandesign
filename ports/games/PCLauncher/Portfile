@@ -5,8 +5,7 @@ PortSystem                  1.0
 PortGroup                   xcode 1.0
 
 name                        PCLauncher
-version                     0.0.1-72189
-revision                    1
+version                     0.0.1-72194
 categories                  games
 maintainers                 ryandesign
 homepage                    http://plasmaclient.servegame.org/
@@ -25,13 +24,25 @@ worksrcdir                  ${name}
 depends_run                 port:PlasmaClient \
                             port:Drizzle
 
+post-extract {
+    foreach app {PCDownloader PCExtractor} {
+        copy ${filespath}/${app}.in ${worksrcpath}/${app}
+    }
+}
+
 patchfiles                  patch-PCLauncher.applescript.diff
 
 post-patch {
-    reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/PCLauncher.applescript
+    reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/PCLauncher.applescript ${worksrcpath}/PCDownloader ${worksrcpath}/PCExtractor
 }
 
 post-destroot {
-    xinstall -d ${destroot}${applications_dir}/PCLauncher.app/Contents/Resources/PlasmaClient.app/Contents/MacOS
-    ln -s ${prefix}/bin/PlasmaClient ${destroot}${applications_dir}/PCLauncher.app/Contents/Resources/PlasmaClient.app/Contents/MacOS
+    foreach app {PCDownloader PCExtractor} {
+        xinstall -d ${destroot}${applications_dir}/PCLauncher.app/Contents/Resources/${app}.app/Contents/MacOS
+        xinstall ${worksrcpath}/${app} ${destroot}${applications_dir}/PCLauncher.app/Contents/Resources/${app}.app/Contents/MacOS/${app}
+    }
+    foreach app {PCAuthenticator PlasmaClient} {
+        xinstall -d ${destroot}${applications_dir}/PCLauncher.app/Contents/Resources/${app}.app/Contents/MacOS
+        ln -s ${prefix}/bin/PlasmaClient ${destroot}${applications_dir}/PCLauncher.app/Contents/Resources/${app}.app/Contents/MacOS/${app}
+    }
 }
