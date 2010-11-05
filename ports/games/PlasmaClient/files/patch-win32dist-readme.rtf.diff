@@ -1,5 +1,5 @@
---- win32dist/readme.rtf.orig	2010-10-02 01:08:07.000000000 -0500
-+++ win32dist/readme.rtf	2010-10-02 01:08:10.000000000 -0500
+--- win32dist/readme.rtf.orig	2010-11-04 22:49:14.000000000 -0500
++++ win32dist/readme.rtf	2010-11-04 22:59:41.000000000 -0500
 @@ -1,9 +1,9 @@
  {\rtf1\ansi\ansicpg932\deff0\deftab709{\fonttbl{\f0\froman\fprq2\fcharset128 Times New Roman;}{\f1\froman\fprq2\fcharset0 Times New Roman;}}
  {\*\generator Msftedit 5.41.15.1515;}\viewkind4\uc1\pard\lang1033\b\f0\fs24 Important Information\b0\par
@@ -12,10 +12,12 @@
  \par
  \b Controls\par
  \par
-@@ -69,5 +69,5 @@
+@@ -70,7 +70,7 @@
  \par
  \b Graphics Settings\b0\par
  \par
--\tab PlasmaClient does not use the Myst Online graphics settings. To change your PlasmaClient settings, use the included gfxconfig.exe. This will not affect your Myst Online graphics settings.\par
-+\tab PlasmaClient does not use the Myst Online graphics settings. There is currently no Mac interface to change your PlasmaClient graphics settings.\par
+-\tab PlasmaClient does not use the Myst Online graphics settings. To change your PlasmaClient settings, use the\f1  "Graphics" tab of PCLauncher.exe\f0 . This will not affect your Myst Online graphics settings.\par
++\tab PlasmaClient does not use the Myst Online graphics settings. To change your PlasmaClient settings, select "Preferences" from the PCLauncher menu. This will not affect your Myst Online graphics settings.\par
+ \par
+ \f1\tab To disable the framerate counter, you can use the command "/fps off". To turn it on again, use "/fps on"\f0\par
  }
