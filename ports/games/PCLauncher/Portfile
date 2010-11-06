@@ -5,7 +5,7 @@ PortSystem                  1.0
 PortGroup                   xcode 1.0
 
 name                        PCLauncher
-version                     0.0.1-72534
+version                     0.0.2-73192
 categories                  games
 maintainers                 ryandesign
 homepage                    http://plasmaclient.servegame.org/
@@ -21,6 +21,8 @@ svn.url                     http://svn.macosforge.org/repository/macports/users/
 svn.revision                [lindex [split ${version} -] 1]
 worksrcdir                  ${name}
 
+depends_lib                 port:libhsplasma
+
 depends_run                 port:PlasmaClient \
                             port:Drizzle
 
@@ -32,10 +34,10 @@ post-extract {
     }
 }
 
-patchfiles                  patch-PCLauncher.applescript.diff
+patchfiles                  patch-LoginWindowController.m.diff
 
 post-patch {
-    reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/PCLauncher.applescript ${worksrcpath}/PCDownloader ${worksrcpath}/PCExtractor
+    reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/LoginWindowController.m ${worksrcpath}/PCDownloader ${worksrcpath}/PCExtractor
 }
 
 post-destroot {
