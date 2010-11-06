@@ -1,0 +1,50 @@
+--- PCKi.cpp.orig	Fri Nov 05 12:29:05 2010 -0800
++++ PCKi.cpp	Sat Nov 06 12:58:31 2010 -0500
+@@ -34,6 +34,8 @@
+ 
+ PC_SINGLETON_IMPL_WITH_CTOR_DTOR(PCKi)
+ 
++extern FILE *chatlog;
++
+ void PCKi::drawPlayerList()
+ {
+   plFont* font = PCFontMgr::instance().findFont("Courier", 10);
+@@ -125,6 +127,9 @@
+ {
+   plString buf_string = msg->getUser() + ": " + msg->getString();
+   msgs.push_back(buf_string);
++  buf_string += "\n";
++  fputs(buf_string.cstr(), chatlog);
++  fflush(chatlog);
+   if(msgs.size() > 10)
+     msgs.pop_front();
+ }
+--- main.cpp.orig	Fri Nov 05 12:29:05 2010 -0800
++++ main.cpp	Sat Nov 06 12:58:31 2010 -0500
+@@ -51,6 +51,8 @@
+ extern float pounits;
+ extern int deMode;
+ 
++FILE *chatlog;
++
+ bool drawfps = true;
+ 
+ int main(int argc, char *argv[])
+@@ -105,6 +107,8 @@
+   fps.font = arial;
+   fps.X = pcClient::instance().getSettings().width - 3*arial->getWidth();
+   fps.Y = 5;
++  
++  chatlog = fopen("/tmp/pcchat.log", "a");
+ 
+ //  FontLine loc;
+ //  loc.font = arial;
+@@ -458,6 +462,8 @@
+ 
+   pcClient::instance().writeAWPC();
+ 
++  fclose(chatlog);
++
+   // Free all the global stuff so tools like valgrind won't complain
+   // TODO this is probably wrong on some level
+   pcAuthClient::instance().disconnect();
