@@ -34,10 +34,11 @@ post-extract {
     }
 }
 
-patchfiles                  patch-LoginWindowController.m.diff
+patchfiles                  patch-LoginWindowController.m.diff \
+                            patch-PCLauncher.xcodeproj-project.pbxproj.diff
 
 post-patch {
-    reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/LoginWindowController.m ${worksrcpath}/PCDownloader ${worksrcpath}/PCExtractor
+    reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/LoginWindowController.m ${worksrcpath}/PCLauncher.xcodeproj/project.pbxproj ${worksrcpath}/PCDownloader ${worksrcpath}/PCExtractor
 }
 
 post-destroot {
