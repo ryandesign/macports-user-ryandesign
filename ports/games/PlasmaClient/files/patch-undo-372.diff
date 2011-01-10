@@ -142,7 +142,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  #include <cmath>
  
  void updateCiChildren(plCoordinateInterface* ci)
-@@ -109,31 +104,11 @@
+@@ -109,28 +104,9 @@
  }
  
  PCAvatarPhys::PCAvatarPhys(btRigidBody* _body)
@@ -171,11 +171,8 @@ http://plasmaclient.info/mantis/view.php?id=23
 -  iState = input_state;
  }
  
--
- void PCAvatarPhys::warp(const hsMatrix44& mat)
- {
-   // We need to set the physics on the Bullet object, not the CI
-@@ -201,11 +176,23 @@
+ 
+@@ -201,11 +177,23 @@
  const float c5FRunJump12FHorzSpeed = 12.0f / c5FJumpUDTime;
  const float c5FRunJump20FHorzSpeed = 20.0f / c5FJumpUDTime;
  
@@ -204,7 +201,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  // Just from counting patatoes (not scienced)
  const float strafe_speed = 2.f;
  
-@@ -214,9 +201,11 @@
+@@ -214,9 +202,11 @@
  // Standing was measured using fraps video capture, and neroshowtime to determine time, frames count.
  // spinning full circle in 4 sec in city using male avatar in 1st person
  // So 90 deg/sec.
@@ -218,7 +215,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  {
    btVector3 velocity;
    btVector3 strafeVelocity;
-@@ -276,56 +265,27 @@
+@@ -276,56 +266,27 @@
          float turn_rate;
  
          if(iState & kISForward) {
@@ -292,7 +289,7 @@ http://plasmaclient.info/mantis/view.php?id=23
        }
        break;
    }
-@@ -356,31 +316,6 @@
+@@ -356,31 +317,6 @@
    body->setAngularVelocity(angvelocity);
  }
  
@@ -401,15 +398,9 @@ http://plasmaclient.info/mantis/view.php?id=23
    bool  draggingMouseRB = false;
    float draggingStartX = 0.f;
    float draggingStartY = 0.f;
-@@ -132,91 +128,64 @@
-           break;
-         case SDL_MOUSEBUTTONDOWN:
-         case SDL_MOUSEBUTTONUP:
--          if (evt.button.button == SDL_BUTTON_LEFT) {
--            //Todo: check for other pickables later other than gui. <+Tahg> if(!picking && !physics_disabled) <-psuedocode
-+          if(evt.button.button == SDL_BUTTON_LEFT)
-+            //Todo: check for other pickables later other than gui. 
-+            //<+Tahg> if(!picking && !physics_disabled) <-psuedocode
+@@ -135,80 +131,43 @@
+           if (evt.button.button == SDL_BUTTON_LEFT) {
+             //Todo: check for other pickables later other than gui. <+Tahg> if(!picking && !physics_disabled) <-psuedocode
              if (!pcRenderer::instance().doPicking( evt.button.x, pcClient::instance().getSettings().height - evt.button.y).Exists()) {
 -              if (!draggingMouseMB) {
 +              if (!draggingMouseRB) {
@@ -444,8 +435,7 @@ http://plasmaclient.info/mantis/view.php?id=23
              } else
                PCGUIMgr::instance().mouseEvent(evt.button.x, evt.button.y, evt.button.state == SDL_PRESSED);
 -          } else if(evt.button.button == SDL_BUTTON_MIDDLE) {
-+          else if(evt.button.button == SDL_BUTTON_RIGHT) {
-             if (!draggingMouseLB) {
+-            if (!draggingMouseLB) {
 -              draggingMouseMB = evt.button.state == SDL_PRESSED;
 -              PCAvatarMgr::instance().updateMouseInputState((SDL_EventType)evt.type, evt.button.button, evt.button.state,
 -                                                            (double)evt.button.x / (double)pcClient::instance().getSettings().width,
@@ -466,7 +456,7 @@ http://plasmaclient.info/mantis/view.php?id=23
 -                PCAvatarMgr::instance().updateInputState(SDLK_DOWN, false);
 -              }
 -            }
--          } else if(evt.button.button == SDL_BUTTON_RIGHT) {
+           } else if(evt.button.button == SDL_BUTTON_RIGHT) {
 -            if (!draggingMouseMB)
 -               draggingMouseRB = evt.button.state == SDL_PRESSED;
 -            if (draggingMouseLB)
@@ -476,6 +466,7 @@ http://plasmaclient.info/mantis/view.php?id=23
 -              PCAvatarMgr::instance().updateMouseInputState((SDL_EventType)evt.type, evt.button.button, evt.button.state,
 -                                                            (double)evt.button.x / (double)pcClient::instance().getSettings().width,
 -                                                            (double)evt.button.y / (double)pcClient::instance().getSettings().height);
++            if (!draggingMouseLB) {
 +              draggingMouseRB = evt.button.state == SDL_PRESSED;
                if (draggingMouseRB) {
                  draggingStartX = evt.button.x;
@@ -496,12 +487,11 @@ http://plasmaclient.info/mantis/view.php?id=23
 -
 +          if (draggingMouseLB || draggingMouseRB) {
              float newlookUDAngle = originallookUDAngle + ((float)(draggingStartY - evt.motion.y) / max_look_mouse_swipe) * max_look_mouse_angle ;
--
+ 
              if (newlookUDAngle < max_look_down_angle) 
-               newlookUDAngle = max_look_down_angle;
-             else if (newlookUDAngle > max_look_up_angle) 
+@@ -217,6 +176,17 @@
                newlookUDAngle = max_look_up_angle;
--
+ 
              pcRenderer::instance().setLookUDAngle(newlookUDAngle);
 +
 +            if (evt.motion.x > draggingStartX + start_rotation_mouse_delta) {
@@ -517,36 +507,28 @@ http://plasmaclient.info/mantis/view.php?id=23
            } else
              PCGUIMgr::instance().mouseMove(evt.motion.x, evt.motion.y);
              break;
-@@ -372,16 +341,20 @@
+@@ -372,16 +342,20 @@
                  float newlookUDAngle;
                  switch(evt.key.keysym.sym) {
                  case SDLK_w:
--                  newlookUDAngle  = pcRenderer::instance().getLookUDAngle() + kbd_look_angle_step;
--                  if (newlookUDAngle > max_look_up_angle)
--                    newlookUDAngle = max_look_up_angle;
--                  pcRenderer::instance().setLookUDAngle(newlookUDAngle);
 +                  if (!draggingMouseLB) { // Don't allow look using kbd while using mouse one
-+                    newlookUDAngle  = pcRenderer::instance().getLookUDAngle() + kbd_look_angle_step;
-+                    if (newlookUDAngle > max_look_up_angle)
-+                      newlookUDAngle = max_look_up_angle;
-+                    pcRenderer::instance().setLookUDAngle(newlookUDAngle);
+                   newlookUDAngle  = pcRenderer::instance().getLookUDAngle() + kbd_look_angle_step;
+                   if (newlookUDAngle > max_look_up_angle)
+                     newlookUDAngle = max_look_up_angle;
+                   pcRenderer::instance().setLookUDAngle(newlookUDAngle);
 +                  }
                    break;
                  case SDLK_x:
--                  newlookUDAngle  = pcRenderer::instance().getLookUDAngle() - kbd_look_angle_step;
--                  if (newlookUDAngle < max_look_down_angle)
--                    newlookUDAngle = max_look_down_angle;
--                  pcRenderer::instance().setLookUDAngle(newlookUDAngle);
 +                  if (!draggingMouseLB) { // Don't allow look using kbd while using mouse one
-+                    newlookUDAngle  = pcRenderer::instance().getLookUDAngle() - kbd_look_angle_step;
-+                    if (newlookUDAngle < max_look_down_angle)
-+                      newlookUDAngle = max_look_down_angle;
-+                    pcRenderer::instance().setLookUDAngle(newlookUDAngle);
+                   newlookUDAngle  = pcRenderer::instance().getLookUDAngle() - kbd_look_angle_step;
+                   if (newlookUDAngle < max_look_down_angle)
+                     newlookUDAngle = max_look_down_angle;
+                   pcRenderer::instance().setLookUDAngle(newlookUDAngle);
 +                  }
                    break;
                  case SDLK_s:
                    pcRenderer::instance().setLookUDAngle(0.);
-@@ -460,7 +433,7 @@
+@@ -460,7 +434,7 @@
        }
      }
      double t = getTimeDiff();
