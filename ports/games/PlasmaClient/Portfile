@@ -6,7 +6,7 @@ PortGroup                   cmake 1.0
 
 name                        PlasmaClient
 epoch                       1
-version                     0.0.2-347
+version                     0.0.3-372
 categories                  games
 platforms                   darwin
 maintainers                 ryandesign
@@ -23,7 +23,7 @@ long_description            ${name} is an open-source cross-platform \
 
 fetch.type                  hg
 hg.url                      http://uru.zrax.net/hg/plasmaclient
-hg.tag                      f2cc2d63b0fa
+hg.tag                      5a1b06acfa7a
 
 depends_lib                 port:bullet \
                             port:python26 \
@@ -51,10 +51,14 @@ if {![file exists ${prefix}/lib/libboost_python-mt.dylib]} {
 }
 
 post-extract {
-    reinplace "s|\r||g" ${worksrcpath}/win32dist/readme.rtf
+    reinplace "s|\r||g" ${worksrcpath}/win32dist/readme.rtf \
+                        ${worksrcpath}/main.cpp \
+                        ${worksrcpath}/PCAvatarMgr.cpp \
+                        ${worksrcpath}/PCAvatarMgr.h
 }
 
-patchfiles                  patch-win32dist-readme.rtf.diff
+patchfiles                  patch-win32dist-readme.rtf.diff \
+                            patch-undo-372.diff
 
 configure.args              -DBULLET_INCLUDE_DIR:PATH=${prefix}/include/bullet \
                             -DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE \

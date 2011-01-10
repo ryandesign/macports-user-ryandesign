@@ -1,0 +1,648 @@
+http://plasmaclient.info/mantis/view.php?id=23
+--- CMakeLists.txt	2011-01-07 07:26:45.000000000 -0600
++++ CMakeLists.txt	2011-01-07 07:26:10.000000000 -0600
+@@ -46,7 +46,6 @@
+     main.cpp
+     PCAgeMgr.cpp
+     PCAvatarMgr.cpp
+-    PCAvBrainHuman.cpp
+     PCFontMgr.cpp
+     PCGlobals.cpp
+     PCKi.cpp
+@@ -65,7 +64,6 @@
+ set(PC_HDRS
+     PCAgeMgr.h
+     PCAvatarMgr.h
+-    PCAvBrainHuman.h
+     PCFontMgr.h
+     PCGlobals.h
+     PCKi.h
+--- PCAvatarMgr.cpp	2011-01-07 07:26:45.000000000 -0600
++++ PCAvatarMgr.cpp	2011-01-07 07:26:10.000000000 -0600
+@@ -336,42 +336,6 @@
+   avatar_bcast_timer = SDL_AddTimer(1000, avatarBcastCallback, 0);
+ }
+ 
+-void PCAvatarMgr::updateMouseInputState(SDL_EventType type, hsUbyte button, hsUbyte state, double xPctPos, double yPctPos)
+-{
+-  if(type == SDL_MOUSEMOTION) {
+-    clones[local_avatar]->setMousePosition(xPctPos,yPctPos,state);
+-  } else {  // SDL_MOUSEBUTTONDOWN or SDL_MOUSEBUTTONUP
+-    hsUint16 mState = clones[local_avatar]->getMouseState();
+-    hsUint16 bit = 0;
+-
+-    switch(button) {
+-      case SDL_BUTTON_LEFT:
+-        bit = PCAvatarPhys::kMSForward;
+-        break;
+-      case SDL_BUTTON_MIDDLE:
+-        bit = PCAvatarPhys::kMSBackward;
+-        break;
+-      case SDL_BUTTON_RIGHT:
+-        bit = PCAvatarPhys::kMSLook;
+-        break;
+-      default:
+-        break;
+-    }
+-
+-    if(type == SDL_MOUSEBUTTONDOWN)
+-      mState |= bit;
+-    else if (type == SDL_MOUSEBUTTONUP)
+-      mState &= ~bit;
+-
+-    clones[local_avatar]->setMouseState(mState);
+-    clones[local_avatar]->setMousePosition(xPctPos,yPctPos,state);
+-  }
+-
+-  sendAvatarSdlBcast();
+-  SDL_RemoveTimer(avatar_bcast_timer);
+-  avatar_bcast_timer = SDL_AddTimer(1000, avatarBcastCallback, 0);
+-}
+-
+ void PCAvatarMgr::sendInputStateMsg()
+ {
+   // plAvatarInputStateMsg targets the avatar's plArmatureLODMod.
+@@ -503,12 +467,12 @@
+   pcGameClient::instance().propagateMessage(&loadClone);
+ }
+ 
+-void PCAvatarMgr::updateAvatarPhysics(double frameTime)
++void PCAvatarMgr::updateAvatarPhysics()
+ {
+   std::vector<PCAvatarPhys*> avs;
+   std::transform(clones.begin(), clones.end(), std::back_inserter(avs), RetrieveValue());
+   foreach(PCAvatarPhys* phys, avs)
+-    phys->updatePhysics(frameTime);
++    phys->updatePhysics();
+ }
+ 
+ //=============================================
+@@ -661,8 +625,3 @@
+ {
+   return (clones[local_avatar]->getInvZSpeed());
+ }
+-
+-void PCAvatarMgr::setMouseTurnSensitivity(double val)
+-{
+-  clones[local_avatar]->setMouseTurnSensitivity(val);
+-}
+--- PCAvatarMgr.h	2011-01-07 07:26:45.000000000 -0600
++++ PCAvatarMgr.h	2011-01-07 07:26:10.000000000 -0600
+@@ -26,7 +26,6 @@
+ #include <PlasmaDefs.h>
+ 
+ #include "SDL_keyboard.h"
+-#include "SDL_events.h"
+ 
+ #include "Math/hsGeometry3.h"
+ #include "Math/hsMatrix44.h"
+@@ -61,7 +60,6 @@
+   unsigned int getLocalPlayer() const { return local_player; }
+   void warpLocalAvatar(hsMatrix44& mat);
+   void updateInputState(SDLKey key, bool keydown);
+-  void updateMouseInputState(SDL_EventType type, hsUbyte button, hsUbyte state, double xPctPos, double yPctPos);
+   const plKey& getLocalAvatar() const { return local_avatar; }
+ 
+   // Functions to propagate local state across the network
+@@ -71,7 +69,7 @@
+   void sendClothingSdl();
+ 
+   // This function should be called once every physics frame
+-  void updateAvatarPhysics(double frameTime);
++  void updateAvatarPhysics();
+ 
+   // misc. functions
+   bool isPlayerSet() { return local_avatar->getClonePlayerID() != 0; }
+@@ -86,7 +84,6 @@
+   void enableLocalAvatarInvZSpeed();
+   void disableLocalAvatarInvZSpeed();
+   bool getLocalAvatarInvZSpeed();
+-  void setMouseTurnSensitivity(double val);
+ 
+ private:
+   void loadLocalAvatar(const plString& shape);
+--- PCPhysicsHelpers.cpp	2011-01-07 07:26:45.000000000 -0600
++++ PCPhysicsHelpers.cpp	2011-01-07 07:26:10.000000000 -0600
+@@ -22,18 +22,13 @@
+ #include "PCPhysicsHelpers.h"
+ #include "PCPhysMgr.h"
+ 
+-#include "PCAvBrainHuman.h"
+-
+ #include <Debug/plDebug.h>
+ #include <PRP/Object/plCoordinateInterface.h>
+ #include <PRP/Object/plSceneObject.h>
+ #include <PRP/Object/plSimulationInterface.h>
+ #include <PRP/Physics/plGenericPhysical.h>
+-#include "Sys/plUnifiedTime.h"
+ #include <BulletDynamics/Dynamics/btRigidBody.h>
+ 
+-#include "SDL_mouse.h"
+-
+ #include <cmath>
+ 
+ void updateCiChildren(plCoordinateInterface* ci)
+@@ -109,31 +104,11 @@
+ }
+ 
+ PCAvatarPhys::PCAvatarPhys(btRigidBody* _body)
+-  : iState(0), mState(0), invZSpeed(false), flyMode(false)
++  : state(0), invZSpeed(false), flyMode(false)
+ {
+   body = _body;
+-  brain = new pcAvBrainHuman();
+-}
+-
+-void PCAvatarPhys::setInputState(hsUint16 input_state)
+-{
+-  if (brain) {
+-    hsUint16 oldAngleState = iState & (kISAngleLeft|kISAngleRight);
+-    hsUint16 newAngleState = input_state & (kISAngleLeft|kISAngleRight);
+-
+-    if (oldAngleState ^ newAngleState) {
+-      if ((newAngleState == kISAngleLeft) || (newAngleState == kISAngleRight)) {
+-        brain->fStartedTurning = plUnifiedTime::GetCurrentTime().getSecsDouble();
+-      } else {
+-        brain->fStartedTurning = 0.0;
+-      }
+-    }
+-  }
+-
+-  iState = input_state;
+ }
+ 
+-
+ void PCAvatarPhys::warp(const hsMatrix44& mat)
+ {
+   // We need to set the physics on the Bullet object, not the CI
+@@ -201,11 +176,23 @@
+ const float c5FRunJump12FHorzSpeed = 12.0f / c5FJumpUDTime;
+ const float c5FRunJump20FHorzSpeed = 20.0f / c5FJumpUDTime;
+ 
+-const float run_speed = 15.18f; // number taken from Cyan's armature debug info
+-const float walk_speed = 5.84f; // number taken from Cyan's armature debug info
+-//const float walk_bwd_speed = 4.15f; // number taken from Cyan's armature debug info (FEMALE)
+-const float walk_bwd_speed = 4.66f; // number taken from Cyan's armature debug info (MALE)
+-
++// TODO: DO science for walking speeds and walking jump distances. These are NOT in Cyan Plugin Documentation at the moment.
++// Scienced numbers:
++// 1) Running in circle (up+right+shift), using fraps video capture, and neroshowtime to determine time, frames count.
++//    Circled in 3 41/60 sec in Minkata using female avatar in 3rd person.
++//    Measured diameter using city using male,3rd person on city terrase/balcony at top of great stair (looking toward bridge)
++//    Using Ki coordinates computed inner circle edge of floor decal (matches run circle!) to be 16.571 feet = 52.059... feet circum.
++//    Giving a run speed of 14.135 f/s. Suspect that number are integers in the end so use 14.f/s?
++// 2) Running straight (up+right+shift), using fraps video capture, and neroshowtime to determine time, frames count.
++//    using markers in city at top of great stairs, male avatar in 3rd person.
++//    distance between 4 markers : 53.3435 fee Total time: 4.0833 sec. 13.06 f/s
++const float run_speed = 14.0f;
++// 3) Walking straight (up+right+shift), using fraps video capture, and neroshowtime to determine time, frames count.
++//    using markers in city at top of great stairs, male avatar in 3rd person.
++//    distance between 4 markers : 53.3435 fee Total time: 10.5666 sec. 5.05 f/s
++const float walk_speed = 5.0f;
++// Based on Cyan client observation when walking backward vs forward (not scienced)
++const float walk_bwd_speed = walk_speed * .8f;
+ // Just from counting patatoes (not scienced)
+ const float strafe_speed = 2.f;
+ 
+@@ -214,35 +201,37 @@
+ // Standing was measured using fraps video capture, and neroshowtime to determine time, frames count.
+ // spinning full circle in 4 sec in city using male avatar in 1st person
+ // So 90 deg/sec.
+-//float standing_turn_rate = 0.5 * 3.14159f; 
++float standing_turn_rate = 0.5 * 3.14159f; 
++float walking_turn_rate = 2.0;
++float running_turn_rate = 1.7;
+ 
+-void PCAvatarPhys::updatePhysics(double frameTime)
++void PCAvatarPhys::updatePhysics()
+ {
+   btVector3 velocity;
+   btVector3 strafeVelocity;
+ 
+   float zlf;
+ 
+-  if(flyMode) zlf = 0.f;
++  if (flyMode) zlf = 0.f;
+   else zlf = 1.f;
+ 
+-  bool running = ((iState & kISRun) != 0) ^ ((iState & kISAlwaysRun) != 0);
++  bool running = ((state & kISRun) != 0) ^ ((state & kISAlwaysRun) != 0);
+ 
+-  if(iState & kISForward) {
++  if(state & kISForward) {
+     if(running)
+       velocity = btMatrix3x3(body->getWorldTransform().getRotation()) * btVector3(0.f, -run_speed, 0.f);
+     else
+       velocity = btMatrix3x3(body->getWorldTransform().getRotation()) * btVector3(0.f, -walk_speed, 0.f);
+     body->setLinearFactor(btVector3(1.f, 1.f, zlf));
+-  } else if(iState & kISBackward) {
++  } else if(state & kISBackward) {
+     running = false; // for turning speed purposes
+     // Note: No running backward support in actual client
+     velocity = btMatrix3x3(body->getWorldTransform().getRotation()) * btVector3(0.f, walk_bwd_speed, 0.f);
+     body->setLinearFactor(btVector3(1.f, 1.f, zlf));
+   } else { // stand still
+-    if(!(iState & kISJump)) { // not jumping
++    if (!(state & kISJump)) { // not jumping
+       // Note: Strafe should only be permited while NOT falling. Todo : add surface contact detection
+-      switch (iState & (kISStrafeLeft|kISStrafeRight)) {
++      switch (state & (kISStrafeLeft|kISStrafeRight)) {
+         case kISStrafeLeft:
+           velocity = btMatrix3x3(body->getWorldTransform().getRotation()) * btVector3(strafe_speed, 0.f, 0.f);
+           body->setLinearFactor(btVector3(1.f, 1.f, zlf));
+@@ -264,10 +253,10 @@
+ 
+   btVector3 angvelocity;
+ 
+-  switch(iState & (kISStrafeLeft|kISStrafeRight)) {
++  switch (state & (kISStrafeLeft|kISStrafeRight)) {
+     case kISStrafeLeft:
+     case kISStrafeRight:
+-      if(!(iState & (kISForward|kISBackward|kISJump))) {
++      if (!(state & (kISForward|kISBackward|kISJump))) {
+         angvelocity = btVector3(0.f, 0.f, 0.f);
+         break;
+       } // else ignore strafe states and allow rotation
+@@ -275,74 +264,45 @@
+       {
+         float turn_rate;
+ 
+-        if(iState & kISForward) {
+-          if(brain) {
+-            brain->SetFastKeyDown(running);
+-            brain->SetFrameTime(frameTime);
+-
+-            hsUint16 angle_state = iState & (kISAngleLeft|kISAngleRight);
+-
+-            if(angle_state == kISAngleLeft)
+-              brain->SetKeyTurnStrength(1);
+-            else if(angle_state == kISAngleRight)
+-              brain->SetKeyTurnStrength(-1);
+-            else
+-              brain->SetKeyTurnStrength(0);
+-
+-            turn_rate = brain->IGetTurnStrength(plUnifiedTime::GetCurrentTime().getSecsDouble());
+-          }
+-        } else if(iState & kISBackward) {
+-          if(brain) {
+-            brain->SetFastKeyDown(false);
+-            brain->SetFrameTime(frameTime);
+-
+-            hsUint16 angle_state = iState & (kISAngleLeft|kISAngleRight);
+-
+-            if(angle_state == kISAngleLeft)
+-              brain->SetKeyTurnStrength(1);
+-            else if(angle_state == kISAngleRight)
+-              brain->SetKeyTurnStrength(-1);
+-            else
+-              brain->SetKeyTurnStrength(0);
+-
+-            turn_rate = brain->IGetTurnStrength(plUnifiedTime::GetCurrentTime().getSecsDouble());
+-          }
++        if(state & kISForward) {
++          if(running)
++            turn_rate = running_turn_rate;
++          else
++            turn_rate = walking_turn_rate;
++        } else if(state & kISBackward) {
++          turn_rate = walking_turn_rate;
+         } else {
+-          if(brain) {
+-            brain->SetFastKeyDown(false);
+-            brain->SetFrameTime(frameTime);
+-
+-            hsUint16 angle_state = iState & (kISAngleLeft|kISAngleRight);
+-
+-            if(angle_state == kISAngleLeft)
+-              brain->SetKeyTurnStrength(1);
+-            else if(angle_state == kISAngleRight)
+-              brain->SetKeyTurnStrength(-1);
+-            else
+-              brain->SetKeyTurnStrength(0);
+-
+-            turn_rate = brain->IGetTurnStrength(plUnifiedTime::GetCurrentTime().getSecsDouble());
+-          }
++          turn_rate = standing_turn_rate;
+         }
+ 
+-        angvelocity = btVector3(0.f, 0.f, turn_rate);
++        switch (state & (kISAngleLeft|kISAngleRight)) {
++        case kISAngleLeft:
++          angvelocity = btVector3(0.f, 0.f, turn_rate);
++          break;
++        case kISAngleRight:
++          angvelocity = btVector3(0.f, 0.f, -turn_rate);
++          break;
++        default: // no rotation or rotate / turn left and right : no rotation (checked in actual client)
++          angvelocity = btVector3(0.f, 0.f, 0.f);
++          break;
++        }
+       }
+       break;
+   }
+ 
+   btScalar z_speed;
+ 
+-  if(flyMode) z_speed = 0.f;
++  if (flyMode) z_speed = 0.f;
+   else z_speed = body->getLinearVelocity().getZ();
+ 
+-  if(iState & kISJump) { // jump : Todo : this is temporary until jump permutation / logic understood (forward standstill jump for example)
++  if(state & kISJump) { // jump : Todo : this is temporary until jump permutation / logic understood (forward standstill jump for example)
+     if(running)
+       z_speed += high_jump;
+     else
+       z_speed += normal_jump;
+ 
+     // Clear jump state to enforce single shot action, otherwise we end up on the moon!
+-    if (!flyMode) iState &= ~kISJump;
++    if (!flyMode) state &= ~kISJump;
+ 
+     // Note: If avatar is falling it will still jump :i.e you can jump while in mid air! 
+     // Todo: Make above conditional to contacting a surface!
+@@ -356,31 +316,6 @@
+   body->setAngularVelocity(angvelocity);
+ }
+ 
+-void PCAvatarPhys::setMouseState(hsUint16 mouse_state)
+-{
+-  if(brain) {
+-    if(!(mouse_state & (kMSForward|kMSBackward|kMSLook)))
+-      brain->SetAnalogTurnStrength(0.0);
+-  }
+-
+-  mState = mouse_state;
+-}
+-
+-void PCAvatarPhys::setMousePosition(double xPctPos, double yPctPos, hsUbyte bState)
+-{
+-  if(brain) {
+-    if(mState & (kMSForward|kMSBackward|kMSLook))
+-      brain->IHandleMouseControl(0.5 - xPctPos);
+-  }
+-}
+-
+-void PCAvatarPhys::setMouseTurnSensitivity(double val)
+-{
+-  if(brain) {
+-      brain->SetMouseTurnSensitivity(val);
+-  }
+-}
+-
+ void PCAvatarPhys::enableCollision() {
+   body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
+ }
+--- PCPhysicsHelpers.h	2011-01-07 07:26:45.000000000 -0600
++++ PCPhysicsHelpers.h	2011-01-07 07:26:10.000000000 -0600
+@@ -29,7 +29,6 @@
+ 
+ class btRigidBody;
+ class PCAvatarPhys;
+-class pcAvBrainHuman;
+ 
+ void updateCiChildren(plCoordinateInterface* ci);
+ 
+@@ -66,25 +65,16 @@
+    kISJump        = 0x0180,
+    kISRun         = 0x0200
+   };
+-  enum MouseStates {
+-   kMSForward     = 0x0001,
+-   kMSBackward    = 0x0002,
+-   kMSLook        = 0x0004
+-  };
+ 
+   PCAvatarPhys(btRigidBody* body);
+-  void setInputState(hsUint16 input_state);
+-  hsUint16 getInputState() const { return iState; }
+-  void setMouseState(hsUint16 mouse_state);
+-  hsUint16 getMouseState() const { return mState; }
+-  void setMousePosition(double xPctPos, double yPctPos, hsUbyte bState);
+-  void setMouseTurnSensitivity(double val);
++  void setInputState(hsUint16 input_state) { state = input_state; }
++  hsUint16 getInputState() const { return state; }
+   void warp(const hsMatrix44& mat);
+ 
+   hsVector3 getOrigin() const;
+   float getRotation() const;
+ 
+-  void updatePhysics(double frameTime);
++  void updatePhysics();
+   void enableCollision();
+   void disableCollision();
+ 
+@@ -96,12 +86,8 @@
+   bool getInvZSpeed() {return invZSpeed;}
+ 
+ private:
+-  pcAvBrainHuman* brain;
+   btRigidBody* body;
+-  hsUint16 iState;
+-  hsUint16 mState;
+-  double xMousePctPos;
+-  double yMousePctPos;
++  hsUint16 state;
+   bool invZSpeed;
+   bool flyMode;
+ };
+--- main.cpp	2011-01-07 07:26:45.000000000 -0600
++++ main.cpp	2011-01-07 07:26:10.000000000 -0600
+@@ -53,10 +53,6 @@
+ 
+ bool drawfps = true;
+ 
+-#include <SDL/plSDLMgr.h>
+-#include <SDL/plStateDataRecord.h>
+-#include <Stream/hsStream.h>
+-
+ int main(int argc, char *argv[])
+ {
+   if(!pcClient::instance().parseCommandLine(argc, argv))
+@@ -94,11 +90,11 @@
+   const float max_look_down_angle = -90.f;    // Note: exagerated for now so to examine age rendering. Todo: reduce to proper limit
+   const float max_look_up_angle = +90.f;      // Note: exagerated for now so to examine age rendering. Todo: reduce to proper limit
+   const float max_look_mouse_swipe = 300.f;   // Maximum number of pixel to swipe up or down to produce +/- max_look_mouse_angle change: using 300 creates a  600x600 area fitting MOST screens resolutions.
++  const int   start_rotation_mouse_delta = 72;// Minimum number of pixel from dragging start position in x direction to change avatar left/right rotation state: 72 @ 96DPI = 0.75 inch from start point.
+   const float max_look_mouse_angle = 45.0f;   // Maximum look up/down angle change from single mouse drag up/down. Note: Could be variable instead base on display settings, fovy...
+   const float kbd_look_angle_step = 1.f;   
+   float originallookUDAngle = 0.f;
+   bool  draggingMouseLB = false;
+-  bool  draggingMouseMB = false;
+   bool  draggingMouseRB = false;
+   float draggingStartX = 0.f;
+   float draggingStartY = 0.f;
+@@ -132,91 +128,64 @@
+           break;
+         case SDL_MOUSEBUTTONDOWN:
+         case SDL_MOUSEBUTTONUP:
+-          if (evt.button.button == SDL_BUTTON_LEFT) {
+-            //Todo: check for other pickables later other than gui. <+Tahg> if(!picking && !physics_disabled) <-psuedocode
++          if(evt.button.button == SDL_BUTTON_LEFT)
++            //Todo: check for other pickables later other than gui. 
++            //<+Tahg> if(!picking && !physics_disabled) <-psuedocode
+             if (!pcRenderer::instance().doPicking( evt.button.x, pcClient::instance().getSettings().height - evt.button.y).Exists()) {
+-              if (!draggingMouseMB) {
++              if (!draggingMouseRB) {
+                 draggingMouseLB = evt.button.state == SDL_PRESSED;
+-                PCAvatarMgr::instance().updateMouseInputState((SDL_EventType)evt.type, evt.button.button, evt.button.state,
+-                                                              (double)evt.button.x / (double)pcClient::instance().getSettings().width,
+-                                                              (double)evt.button.y / (double)pcClient::instance().getSettings().height);
+-
+-
+                 if (draggingMouseLB) {
+                   draggingStartX = evt.button.x;
+                   draggingStartY = evt.button.y;
+                   originallookUDAngle = pcRenderer::instance().getLookUDAngle();
+                 }
+-
++                // reset all arrow keys related state: Dont want to use both at the same time at this moment since not using independent move and view rotations.
++                PCAvatarMgr::instance().updateInputState(SDLK_RIGHT, false);
++                PCAvatarMgr::instance().updateInputState(SDLK_LEFT, false);
+                 // start or stop moving forward.
+                 if (draggingMouseLB) {
+                   PCAvatarMgr::instance().updateInputState(SDLK_DOWN, false);
+                   PCAvatarMgr::instance().updateInputState(SDLK_UP, true);
+-                  if (draggingMouseRB)
+-                     PCAvatarMgr::instance().updateInputState(SDLK_RSHIFT, true);
+                 } else {
+                   PCAvatarMgr::instance().updateInputState(SDLK_UP, false);
+                   PCAvatarMgr::instance().updateInputState(SDLK_DOWN, false);
+-                  if (draggingMouseRB)
+-                     PCAvatarMgr::instance().updateInputState(SDLK_RSHIFT, false);
+                 }
+               }
+             } else
+               PCGUIMgr::instance().mouseEvent(evt.button.x, evt.button.y, evt.button.state == SDL_PRESSED);
+-          } else if(evt.button.button == SDL_BUTTON_MIDDLE) {
++          else if(evt.button.button == SDL_BUTTON_RIGHT) {
+             if (!draggingMouseLB) {
+-              draggingMouseMB = evt.button.state == SDL_PRESSED;
+-              PCAvatarMgr::instance().updateMouseInputState((SDL_EventType)evt.type, evt.button.button, evt.button.state,
+-                                                            (double)evt.button.x / (double)pcClient::instance().getSettings().width,
+-                                                            (double)evt.button.y / (double)pcClient::instance().getSettings().height);
+-
+-              if (draggingMouseMB) {
+-                draggingStartX = evt.button.x;
+-                draggingStartY = evt.button.y;
+-                originallookUDAngle = pcRenderer::instance().getLookUDAngle();
+-              }
+-
+-              // start or stop moving forward.
+-              if (draggingMouseMB) {
+-                PCAvatarMgr::instance().updateInputState(SDLK_DOWN, true);
+-                PCAvatarMgr::instance().updateInputState(SDLK_UP, false);
+-              } else {
+-                PCAvatarMgr::instance().updateInputState(SDLK_UP, false);
+-                PCAvatarMgr::instance().updateInputState(SDLK_DOWN, false);
+-              }
+-            }
+-          } else if(evt.button.button == SDL_BUTTON_RIGHT) {
+-            if (!draggingMouseMB)
+-               draggingMouseRB = evt.button.state == SDL_PRESSED;
+-            if (draggingMouseLB)
+-               PCAvatarMgr::instance().updateInputState(SDLK_RSHIFT, draggingMouseRB);
+-
+-            if (!draggingMouseLB && !draggingMouseMB) {
+-              PCAvatarMgr::instance().updateMouseInputState((SDL_EventType)evt.type, evt.button.button, evt.button.state,
+-                                                            (double)evt.button.x / (double)pcClient::instance().getSettings().width,
+-                                                            (double)evt.button.y / (double)pcClient::instance().getSettings().height);
++              draggingMouseRB = evt.button.state == SDL_PRESSED;
+               if (draggingMouseRB) {
+                 draggingStartX = evt.button.x;
+                 draggingStartY = evt.button.y;
+                 originallookUDAngle = pcRenderer::instance().getLookUDAngle();
+               }
++              // reset left / right key related state: Dont want to use both at the same time at this moment since not using independent move and view rotations.
++              PCAvatarMgr::instance().updateInputState(SDLK_RIGHT, false);
++              PCAvatarMgr::instance().updateInputState(SDLK_LEFT, false);
+             }
+           }
+           break;
+         case SDL_MOUSEMOTION:
+-          if (draggingMouseLB || draggingMouseMB || draggingMouseRB) {
+-            PCAvatarMgr::instance().updateMouseInputState((SDL_EventType)evt.type, 0, evt.motion.state,
+-                                                          (double)evt.motion.x / (double)pcClient::instance().getSettings().width,
+-                                                          (double)evt.motion.y / (double)pcClient::instance().getSettings().height);
+-
++          if (draggingMouseLB || draggingMouseRB) {
+             float newlookUDAngle = originallookUDAngle + ((float)(draggingStartY - evt.motion.y) / max_look_mouse_swipe) * max_look_mouse_angle ;
+-
+             if (newlookUDAngle < max_look_down_angle) 
+               newlookUDAngle = max_look_down_angle;
+             else if (newlookUDAngle > max_look_up_angle) 
+               newlookUDAngle = max_look_up_angle;
+-
+             pcRenderer::instance().setLookUDAngle(newlookUDAngle);
++
++            if (evt.motion.x > draggingStartX + start_rotation_mouse_delta) {
++              PCAvatarMgr::instance().updateInputState(SDLK_LEFT, false);
++              PCAvatarMgr::instance().updateInputState(SDLK_RIGHT, true);
++            } else if (evt.motion.x < draggingStartX - start_rotation_mouse_delta){
++              PCAvatarMgr::instance().updateInputState(SDLK_RIGHT, false);
++              PCAvatarMgr::instance().updateInputState(SDLK_LEFT, true);
++            } else {
++              PCAvatarMgr::instance().updateInputState(SDLK_RIGHT, false);
++              PCAvatarMgr::instance().updateInputState(SDLK_LEFT, false);
++            }
+           } else
+             PCGUIMgr::instance().mouseMove(evt.motion.x, evt.motion.y);
+             break;
+@@ -372,16 +341,20 @@
+                 float newlookUDAngle;
+                 switch(evt.key.keysym.sym) {
+                 case SDLK_w:
+-                  newlookUDAngle  = pcRenderer::instance().getLookUDAngle() + kbd_look_angle_step;
+-                  if (newlookUDAngle > max_look_up_angle)
+-                    newlookUDAngle = max_look_up_angle;
+-                  pcRenderer::instance().setLookUDAngle(newlookUDAngle);
++                  if (!draggingMouseLB) { // Don't allow look using kbd while using mouse one
++                    newlookUDAngle  = pcRenderer::instance().getLookUDAngle() + kbd_look_angle_step;
++                    if (newlookUDAngle > max_look_up_angle)
++                      newlookUDAngle = max_look_up_angle;
++                    pcRenderer::instance().setLookUDAngle(newlookUDAngle);
++                  }
+                   break;
+                 case SDLK_x:
+-                  newlookUDAngle  = pcRenderer::instance().getLookUDAngle() - kbd_look_angle_step;
+-                  if (newlookUDAngle < max_look_down_angle)
+-                    newlookUDAngle = max_look_down_angle;
+-                  pcRenderer::instance().setLookUDAngle(newlookUDAngle);
++                  if (!draggingMouseLB) { // Don't allow look using kbd while using mouse one
++                    newlookUDAngle  = pcRenderer::instance().getLookUDAngle() - kbd_look_angle_step;
++                    if (newlookUDAngle < max_look_down_angle)
++                      newlookUDAngle = max_look_down_angle;
++                    pcRenderer::instance().setLookUDAngle(newlookUDAngle);
++                  }
+                   break;
+                 case SDLK_s:
+                   pcRenderer::instance().setLookUDAngle(0.);
+@@ -460,7 +433,7 @@
+       }
+     }
+     double t = getTimeDiff();
+-    PCAvatarMgr::instance().updateAvatarPhysics(t);
++    PCAvatarMgr::instance().updateAvatarPhysics();
+     PCPhysMgr::instance().step(t);
+     pcRenderer::instance().drawScene();
+     if(drawphysics)
+@@ -481,7 +454,6 @@
+ //    pcRenderer::instance().drawText(loc);
+ 
+     SDL_GL_SwapBuffers(); // TODO: move this into a PCRenderer function
+-
+   } while(running);
+ 
+   pcClient::instance().writeAWPC();
+--- singletons/pcClient.cpp	2011-01-07 07:26:45.000000000 -0600
++++ singletons/pcClient.cpp	2011-01-07 07:26:10.000000000 -0600
+@@ -360,10 +360,6 @@
+   } else if(cmd.startsWith("deMode",true)) {
+     deMode = cmd.afterFirst(' ').toInt();
+     return (true);
+-  } else if(cmd.startsWith("mts",true)) {
+-    double mts = cmd.afterFirst(' ').toFloat() * 150.0;
+-    PCAvatarMgr::instance().setMouseTurnSensitivity(mts);
+-    return (true);
+   } else if(cmd.startsWith("clearchat",true)) {
+     PCKi::instance().clearMsgs();
+     return (true);
