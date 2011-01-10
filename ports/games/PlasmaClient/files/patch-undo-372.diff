@@ -142,7 +142,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  #include <cmath>
  
  void updateCiChildren(plCoordinateInterface* ci)
-@@ -109,28 +104,9 @@
+@@ -109,27 +104,13 @@
  }
  
  PCAvatarPhys::PCAvatarPhys(btRigidBody* _body)
@@ -151,10 +151,10 @@ http://plasmaclient.info/mantis/view.php?id=23
  {
    body = _body;
 -  brain = new pcAvBrainHuman();
--}
--
--void PCAvatarPhys::setInputState(hsUint16 input_state)
--{
+ }
+ 
+ void PCAvatarPhys::setInputState(hsUint16 input_state)
+ {
 -  if (brain) {
 -    hsUint16 oldAngleState = iState & (kISAngleLeft|kISAngleRight);
 -    hsUint16 newAngleState = input_state & (kISAngleLeft|kISAngleRight);
@@ -168,11 +168,10 @@ http://plasmaclient.info/mantis/view.php?id=23
 -    }
 -  }
 -
--  iState = input_state;
+   iState = input_state;
  }
  
- 
-@@ -201,11 +177,23 @@
+@@ -201,11 +182,23 @@
  const float c5FRunJump12FHorzSpeed = 12.0f / c5FJumpUDTime;
  const float c5FRunJump20FHorzSpeed = 20.0f / c5FJumpUDTime;
  
@@ -201,7 +200,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  // Just from counting patatoes (not scienced)
  const float strafe_speed = 2.f;
  
-@@ -214,9 +202,11 @@
+@@ -214,9 +207,11 @@
  // Standing was measured using fraps video capture, and neroshowtime to determine time, frames count.
  // spinning full circle in 4 sec in city using male avatar in 1st person
  // So 90 deg/sec.
@@ -215,7 +214,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  {
    btVector3 velocity;
    btVector3 strafeVelocity;
-@@ -276,56 +266,27 @@
+@@ -276,56 +271,27 @@
          float turn_rate;
  
          if(iState & kISForward) {
@@ -289,7 +288,7 @@ http://plasmaclient.info/mantis/view.php?id=23
        }
        break;
    }
-@@ -356,31 +317,6 @@
+@@ -356,31 +322,6 @@
    body->setAngularVelocity(angvelocity);
  }
  
@@ -342,8 +341,7 @@ http://plasmaclient.info/mantis/view.php?id=23
 -  };
  
    PCAvatarPhys(btRigidBody* body);
--  void setInputState(hsUint16 input_state);
-+  void setInputState(hsUint16 input_state) { iState = input_state; }
+   void setInputState(hsUint16 input_state);
    hsUint16 getInputState() const { return iState; }
 -  void setMouseState(hsUint16 mouse_state);
 -  hsUint16 getMouseState() const { return mState; }
