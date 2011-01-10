@@ -62,21 +62,6 @@ http://plasmaclient.info/mantis/view.php?id=23
  void PCAvatarMgr::sendInputStateMsg()
  {
    // plAvatarInputStateMsg targets the avatar's plArmatureLODMod.
-@@ -544,12 +508,12 @@
-   pcGameClient::instance().propagateMessage(&loadClone);
- }
- 
--void PCAvatarMgr::updateAvatarPhysics(double frameTime)
-+void PCAvatarMgr::updateAvatarPhysics()
- {
-   std::vector<PCAvatarPhys*> avs;
-   std::transform(clones.begin(), clones.end(), std::back_inserter(avs), RetrieveValue());
-   foreach(PCAvatarPhys* phys, avs)
--    phys->updatePhysics(frameTime);
-+    phys->updatePhysics();
- }
- 
- //=============================================
 @@ -702,8 +666,3 @@
  {
    return (clones[local_avatar]->getInvZSpeed());
@@ -96,15 +81,6 @@ http://plasmaclient.info/mantis/view.php?id=23
    const plKey& getLocalAvatar() const { return local_avatar; }
  
    // Functions to propagate local state across the network
-@@ -73,7 +72,7 @@
-   void sendClothingSdl();
- 
-   // This function should be called once every physics frame
--  void updateAvatarPhysics(double frameTime);
-+  void updateAvatarPhysics();
- 
-   // misc. functions
-   bool isPlayerSet() { return local_avatar->getClonePlayerID() != 0; }
 @@ -88,7 +87,6 @@
    void enableLocalAvatarInvZSpeed();
    void disableLocalAvatarInvZSpeed();
@@ -182,7 +158,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  // Just from counting patatoes (not scienced)
  const float strafe_speed = 2.f;
  
-@@ -214,9 +210,11 @@
+@@ -214,7 +210,9 @@
  // Standing was measured using fraps video capture, and neroshowtime to determine time, frames count.
  // spinning full circle in 4 sec in city using male avatar in 1st person
  // So 90 deg/sec.
@@ -191,11 +167,8 @@ http://plasmaclient.info/mantis/view.php?id=23
 +float walking_turn_rate = 2.0;
 +float running_turn_rate = 1.7;
  
--void PCAvatarPhys::updatePhysics(double frameTime)
-+void PCAvatarPhys::updatePhysics()
+ void PCAvatarPhys::updatePhysics(double frameTime)
  {
-   btVector3 velocity;
-   btVector3 strafeVelocity;
 @@ -276,56 +274,27 @@
          float turn_rate;
  
@@ -312,7 +285,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  
  void updateCiChildren(plCoordinateInterface* ci);
  
-@@ -66,25 +65,16 @@
+@@ -66,19 +65,10 @@
     kISJump        = 0x0180,
     kISRun         = 0x0200
    };
@@ -332,13 +305,6 @@ http://plasmaclient.info/mantis/view.php?id=23
    void warp(const hsMatrix44& mat);
  
    hsVector3 getOrigin() const;
-   float getRotation() const;
- 
--  void updatePhysics(double frameTime);
-+  void updatePhysics();
-   void enableCollision();
-   void disableCollision();
- 
 @@ -96,12 +86,8 @@
    bool getInvZSpeed() {return invZSpeed;}
  
@@ -492,15 +458,6 @@ http://plasmaclient.info/mantis/view.php?id=23
                    break;
                  case SDLK_s:
                    pcRenderer::instance().setLookUDAngle(0.);
-@@ -461,7 +440,7 @@
-       }
-     }
-     double t = getTimeDiff();
--    PCAvatarMgr::instance().updateAvatarPhysics(t);
-+    PCAvatarMgr::instance().updateAvatarPhysics();
-     PCPhysMgr::instance().step(t);
-     pcRenderer::instance().drawScene();
-     switch (drawphysics) {
 --- singletons/pcClient.cpp	2011-01-07 07:26:45.000000000 -0600
 +++ singletons/pcClient.cpp	2011-01-07 07:26:10.000000000 -0600
 @@ -376,10 +376,6 @@
