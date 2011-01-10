@@ -88,15 +88,7 @@ http://plasmaclient.info/mantis/view.php?id=23
 -}
 --- PCAvatarMgr.h	2011-01-07 07:26:45.000000000 -0600
 +++ PCAvatarMgr.h	2011-01-07 07:26:10.000000000 -0600
-@@ -26,7 +26,6 @@
- #include <PlasmaDefs.h>
- 
- #include "SDL_keyboard.h"
--#include "SDL_events.h"
- 
- #include "Math/hsGeometry3.h"
- #include "Math/hsMatrix44.h"
-@@ -63,7 +62,6 @@
+@@ -63,7 +63,6 @@
    unsigned int getLocalPlayer() const { return local_player; }
    void warpLocalAvatar(hsMatrix44& mat);
    void updateInputState(SDLKey key, bool keydown);
@@ -104,7 +96,7 @@ http://plasmaclient.info/mantis/view.php?id=23
    const plKey& getLocalAvatar() const { return local_avatar; }
  
    // Functions to propagate local state across the network
-@@ -73,7 +71,7 @@
+@@ -73,7 +72,7 @@
    void sendClothingSdl();
  
    // This function should be called once every physics frame
@@ -113,7 +105,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  
    // misc. functions
    bool isPlayerSet() { return local_avatar->getClonePlayerID() != 0; }
-@@ -88,7 +86,6 @@
+@@ -88,7 +87,6 @@
    void enableLocalAvatarInvZSpeed();
    void disableLocalAvatarInvZSpeed();
    bool getLocalAvatarInvZSpeed();
@@ -123,7 +115,7 @@ http://plasmaclient.info/mantis/view.php?id=23
    void loadLocalAvatar(const plString& shape);
 --- PCPhysicsHelpers.cpp	2011-01-07 07:26:45.000000000 -0600
 +++ PCPhysicsHelpers.cpp	2011-01-07 07:26:10.000000000 -0600
-@@ -22,18 +22,13 @@
+@@ -22,8 +22,6 @@
  #include "PCPhysicsHelpers.h"
  #include "PCPhysMgr.h"
  
@@ -132,17 +124,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  #include <Debug/plDebug.h>
  #include <PRP/Object/plCoordinateInterface.h>
  #include <PRP/Object/plSceneObject.h>
- #include <PRP/Object/plSimulationInterface.h>
- #include <PRP/Physics/plGenericPhysical.h>
--#include "Sys/plUnifiedTime.h"
- #include <BulletDynamics/Dynamics/btRigidBody.h>
- 
--#include "SDL_mouse.h"
--
- #include <cmath>
- 
- void updateCiChildren(plCoordinateInterface* ci)
-@@ -109,27 +104,13 @@
+@@ -109,27 +107,13 @@
  }
  
  PCAvatarPhys::PCAvatarPhys(btRigidBody* _body)
@@ -171,7 +153,7 @@ http://plasmaclient.info/mantis/view.php?id=23
    iState = input_state;
  }
  
-@@ -201,11 +182,23 @@
+@@ -201,11 +185,23 @@
  const float c5FRunJump12FHorzSpeed = 12.0f / c5FJumpUDTime;
  const float c5FRunJump20FHorzSpeed = 20.0f / c5FJumpUDTime;
  
@@ -200,7 +182,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  // Just from counting patatoes (not scienced)
  const float strafe_speed = 2.f;
  
-@@ -214,9 +207,11 @@
+@@ -214,9 +210,11 @@
  // Standing was measured using fraps video capture, and neroshowtime to determine time, frames count.
  // spinning full circle in 4 sec in city using male avatar in 1st person
  // So 90 deg/sec.
@@ -214,7 +196,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  {
    btVector3 velocity;
    btVector3 strafeVelocity;
-@@ -276,56 +271,27 @@
+@@ -276,56 +274,27 @@
          float turn_rate;
  
          if(iState & kISForward) {
@@ -288,7 +270,7 @@ http://plasmaclient.info/mantis/view.php?id=23
        }
        break;
    }
-@@ -356,31 +322,6 @@
+@@ -356,31 +325,6 @@
    body->setAngularVelocity(angvelocity);
  }
  
@@ -372,18 +354,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  };
 --- main.cpp	2011-01-07 07:26:45.000000000 -0600
 +++ main.cpp	2011-01-07 07:26:10.000000000 -0600
-@@ -53,10 +53,6 @@
- 
- bool drawfps = true;
- 
--#include <SDL/plSDLMgr.h>
--#include <SDL/plStateDataRecord.h>
--#include <Stream/hsStream.h>
--
- int main(int argc, char *argv[])
- {
-   if(!pcClient::instance().parseCommandLine(argc, argv))
-@@ -94,11 +90,11 @@
+@@ -94,6 +94,7 @@
    const float max_look_down_angle = -90.f;    // Note: exagerated for now so to examine age rendering. Todo: reduce to proper limit
    const float max_look_up_angle = +90.f;      // Note: exagerated for now so to examine age rendering. Todo: reduce to proper limit
    const float max_look_mouse_swipe = 300.f;   // Maximum number of pixel to swipe up or down to produce +/- max_look_mouse_angle change: using 300 creates a  600x600 area fitting MOST screens resolutions.
@@ -391,12 +362,7 @@ http://plasmaclient.info/mantis/view.php?id=23
    const float max_look_mouse_angle = 45.0f;   // Maximum look up/down angle change from single mouse drag up/down. Note: Could be variable instead base on display settings, fovy...
    const float kbd_look_angle_step = 1.f;   
    float originallookUDAngle = 0.f;
-   bool  draggingMouseLB = false;
--  bool  draggingMouseMB = false;
-   bool  draggingMouseRB = false;
-   float draggingStartX = 0.f;
-   float draggingStartY = 0.f;
-@@ -135,80 +131,43 @@
+@@ -135,80 +136,43 @@
            if (evt.button.button == SDL_BUTTON_LEFT) {
              //Todo: check for other pickables later other than gui. <+Tahg> if(!picking && !physics_disabled) <-psuedocode
              if (!pcRenderer::instance().doPicking( evt.button.x, pcClient::instance().getSettings().height - evt.button.y).Exists()) {
@@ -487,7 +453,7 @@ http://plasmaclient.info/mantis/view.php?id=23
              float newlookUDAngle = originallookUDAngle + ((float)(draggingStartY - evt.motion.y) / max_look_mouse_swipe) * max_look_mouse_angle ;
  
              if (newlookUDAngle < max_look_down_angle) 
-@@ -217,6 +176,17 @@
+@@ -217,6 +181,17 @@
                newlookUDAngle = max_look_up_angle;
  
              pcRenderer::instance().setLookUDAngle(newlookUDAngle);
@@ -505,7 +471,7 @@ http://plasmaclient.info/mantis/view.php?id=23
            } else
              PCGUIMgr::instance().mouseMove(evt.motion.x, evt.motion.y);
              break;
-@@ -372,16 +342,20 @@
+@@ -372,16 +347,20 @@
                  float newlookUDAngle;
                  switch(evt.key.keysym.sym) {
                  case SDLK_w:
@@ -526,7 +492,7 @@ http://plasmaclient.info/mantis/view.php?id=23
                    break;
                  case SDLK_s:
                    pcRenderer::instance().setLookUDAngle(0.);
-@@ -461,7 +435,7 @@
+@@ -461,7 +440,7 @@
        }
      }
      double t = getTimeDiff();
