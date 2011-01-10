@@ -9,7 +9,7 @@ http://plasmaclient.info/mantis/view.php?id=23
      PCFontMgr.cpp
      PCGlobals.cpp
      PCKi.cpp
-@@ -65,7 +64,6 @@
+@@ -66,7 +65,6 @@
  set(PC_HDRS
      PCAgeMgr.h
      PCAvatarMgr.h
@@ -19,7 +19,7 @@ http://plasmaclient.info/mantis/view.php?id=23
      PCKi.h
 --- PCAvatarMgr.cpp	2011-01-07 07:26:45.000000000 -0600
 +++ PCAvatarMgr.cpp	2011-01-07 07:26:10.000000000 -0600
-@@ -336,42 +336,6 @@
+@@ -377,42 +377,6 @@
    avatar_bcast_timer = SDL_AddTimer(1000, avatarBcastCallback, 0);
  }
  
@@ -62,7 +62,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  void PCAvatarMgr::sendInputStateMsg()
  {
    // plAvatarInputStateMsg targets the avatar's plArmatureLODMod.
-@@ -503,12 +467,12 @@
+@@ -544,12 +508,12 @@
    pcGameClient::instance().propagateMessage(&loadClone);
  }
  
@@ -77,7 +77,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  }
  
  //=============================================
-@@ -661,8 +625,3 @@
+@@ -702,8 +666,3 @@
  {
    return (clones[local_avatar]->getInvZSpeed());
  }
@@ -96,7 +96,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  
  #include "Math/hsGeometry3.h"
  #include "Math/hsMatrix44.h"
-@@ -61,7 +60,6 @@
+@@ -63,7 +62,6 @@
    unsigned int getLocalPlayer() const { return local_player; }
    void warpLocalAvatar(hsMatrix44& mat);
    void updateInputState(SDLKey key, bool keydown);
@@ -104,7 +104,7 @@ http://plasmaclient.info/mantis/view.php?id=23
    const plKey& getLocalAvatar() const { return local_avatar; }
  
    // Functions to propagate local state across the network
-@@ -71,7 +69,7 @@
+@@ -73,7 +71,7 @@
    void sendClothingSdl();
  
    // This function should be called once every physics frame
@@ -113,7 +113,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  
    // misc. functions
    bool isPlayerSet() { return local_avatar->getClonePlayerID() != 0; }
-@@ -86,7 +84,6 @@
+@@ -88,7 +86,6 @@
    void enableLocalAvatarInvZSpeed();
    void disableLocalAvatarInvZSpeed();
    bool getLocalAvatarInvZSpeed();
@@ -526,7 +526,7 @@ http://plasmaclient.info/mantis/view.php?id=23
                    break;
                  case SDLK_s:
                    pcRenderer::instance().setLookUDAngle(0.);
-@@ -460,7 +434,7 @@
+@@ -461,7 +435,7 @@
        }
      }
      double t = getTimeDiff();
@@ -534,10 +534,10 @@ http://plasmaclient.info/mantis/view.php?id=23
 +    PCAvatarMgr::instance().updateAvatarPhysics();
      PCPhysMgr::instance().step(t);
      pcRenderer::instance().drawScene();
-     if(drawphysics)
+     switch (drawphysics) {
 --- singletons/pcClient.cpp	2011-01-07 07:26:45.000000000 -0600
 +++ singletons/pcClient.cpp	2011-01-07 07:26:10.000000000 -0600
-@@ -360,10 +360,6 @@
+@@ -376,10 +376,6 @@
    } else if(cmd.startsWith("deMode",true)) {
      deMode = cmd.afterFirst(' ').toInt();
      return (true);
