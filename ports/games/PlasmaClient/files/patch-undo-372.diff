@@ -147,7 +147,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  
  PCAvatarPhys::PCAvatarPhys(btRigidBody* _body)
 -  : iState(0), mState(0), invZSpeed(false), flyMode(false)
-+  : state(0), invZSpeed(false), flyMode(false)
++  : iState(0), invZSpeed(false), flyMode(false)
  {
    body = _body;
 -  brain = new pcAvBrainHuman();
@@ -204,7 +204,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  // Just from counting patatoes (not scienced)
  const float strafe_speed = 2.f;
  
-@@ -214,35 +201,37 @@
+@@ -214,16 +201,18 @@
  // Standing was measured using fraps video capture, and neroshowtime to determine time, frames count.
  // spinning full circle in 4 sec in city using male avatar in 1st person
  // So 90 deg/sec.
@@ -225,49 +225,33 @@ http://plasmaclient.info/mantis/view.php?id=23
 +  if (flyMode) zlf = 0.f;
    else zlf = 1.f;
  
--  bool running = ((iState & kISRun) != 0) ^ ((iState & kISAlwaysRun) != 0);
-+  bool running = ((state & kISRun) != 0) ^ ((state & kISAlwaysRun) != 0);
- 
--  if(iState & kISForward) {
-+  if(state & kISForward) {
-     if(running)
-       velocity = btMatrix3x3(body->getWorldTransform().getRotation()) * btVector3(0.f, -run_speed, 0.f);
-     else
-       velocity = btMatrix3x3(body->getWorldTransform().getRotation()) * btVector3(0.f, -walk_speed, 0.f);
-     body->setLinearFactor(btVector3(1.f, 1.f, zlf));
--  } else if(iState & kISBackward) {
-+  } else if(state & kISBackward) {
-     running = false; // for turning speed purposes
-     // Note: No running backward support in actual client
+   bool running = ((iState & kISRun) != 0) ^ ((iState & kISAlwaysRun) != 0);
+@@ -240,7 +229,7 @@
      velocity = btMatrix3x3(body->getWorldTransform().getRotation()) * btVector3(0.f, walk_bwd_speed, 0.f);
      body->setLinearFactor(btVector3(1.f, 1.f, zlf));
    } else { // stand still
 -    if(!(iState & kISJump)) { // not jumping
-+    if (!(state & kISJump)) { // not jumping
++    if (!(iState & kISJump)) { // not jumping
        // Note: Strafe should only be permited while NOT falling. Todo : add surface contact detection
--      switch (iState & (kISStrafeLeft|kISStrafeRight)) {
-+      switch (state & (kISStrafeLeft|kISStrafeRight)) {
+       switch (iState & (kISStrafeLeft|kISStrafeRight)) {
          case kISStrafeLeft:
-           velocity = btMatrix3x3(body->getWorldTransform().getRotation()) * btVector3(strafe_speed, 0.f, 0.f);
-           body->setLinearFactor(btVector3(1.f, 1.f, zlf));
 @@ -264,10 +253,10 @@
  
    btVector3 angvelocity;
  
 -  switch(iState & (kISStrafeLeft|kISStrafeRight)) {
-+  switch (state & (kISStrafeLeft|kISStrafeRight)) {
++  switch (iState & (kISStrafeLeft|kISStrafeRight)) {
      case kISStrafeLeft:
      case kISStrafeRight:
 -      if(!(iState & (kISForward|kISBackward|kISJump))) {
-+      if (!(state & (kISForward|kISBackward|kISJump))) {
++      if (!(iState & (kISForward|kISBackward|kISJump))) {
          angvelocity = btVector3(0.f, 0.f, 0.f);
          break;
        } // else ignore strafe states and allow rotation
-@@ -275,74 +264,45 @@
-       {
+@@ -276,63 +265,34 @@
          float turn_rate;
  
--        if(iState & kISForward) {
+         if(iState & kISForward) {
 -          if(brain) {
 -            brain->SetFastKeyDown(running);
 -            brain->SetFrameTime(frameTime);
@@ -283,7 +267,11 @@ http://plasmaclient.info/mantis/view.php?id=23
 -
 -            turn_rate = brain->IGetTurnStrength(plUnifiedTime::GetCurrentTime().getSecsDouble());
 -          }
--        } else if(iState & kISBackward) {
++          if(running)
++            turn_rate = running_turn_rate;
++          else
++            turn_rate = walking_turn_rate;
+         } else if(iState & kISBackward) {
 -          if(brain) {
 -            brain->SetFastKeyDown(false);
 -            brain->SetFrameTime(frameTime);
@@ -299,12 +287,6 @@ http://plasmaclient.info/mantis/view.php?id=23
 -
 -            turn_rate = brain->IGetTurnStrength(plUnifiedTime::GetCurrentTime().getSecsDouble());
 -          }
-+        if(state & kISForward) {
-+          if(running)
-+            turn_rate = running_turn_rate;
-+          else
-+            turn_rate = walking_turn_rate;
-+        } else if(state & kISBackward) {
 +          turn_rate = walking_turn_rate;
          } else {
 -          if(brain) {
@@ -326,7 +308,7 @@ http://plasmaclient.info/mantis/view.php?id=23
          }
  
 -        angvelocity = btVector3(0.f, 0.f, turn_rate);
-+        switch (state & (kISAngleLeft|kISAngleRight)) {
++        switch (iState & (kISAngleLeft|kISAngleRight)) {
 +        case kISAngleLeft:
 +          angvelocity = btVector3(0.f, 0.f, turn_rate);
 +          break;
@@ -347,19 +329,7 @@ http://plasmaclient.info/mantis/view.php?id=23
 +  if (flyMode) z_speed = 0.f;
    else z_speed = body->getLinearVelocity().getZ();
  
--  if(iState & kISJump) { // jump : Todo : this is temporary until jump permutation / logic understood (forward standstill jump for example)
-+  if(state & kISJump) { // jump : Todo : this is temporary until jump permutation / logic understood (forward standstill jump for example)
-     if(running)
-       z_speed += high_jump;
-     else
-       z_speed += normal_jump;
- 
-     // Clear jump state to enforce single shot action, otherwise we end up on the moon!
--    if (!flyMode) iState &= ~kISJump;
-+    if (!flyMode) state &= ~kISJump;
- 
-     // Note: If avatar is falling it will still jump :i.e you can jump while in mid air! 
-     // Todo: Make above conditional to contacting a surface!
+   if(iState & kISJump) { // jump : Todo : this is temporary until jump permutation / logic understood (forward standstill jump for example)
 @@ -356,31 +316,6 @@
    body->setAngularVelocity(angvelocity);
  }
@@ -414,13 +384,12 @@ http://plasmaclient.info/mantis/view.php?id=23
  
    PCAvatarPhys(btRigidBody* body);
 -  void setInputState(hsUint16 input_state);
--  hsUint16 getInputState() const { return iState; }
++  void setInputState(hsUint16 input_state) { iState = input_state; }
+   hsUint16 getInputState() const { return iState; }
 -  void setMouseState(hsUint16 mouse_state);
 -  hsUint16 getMouseState() const { return mState; }
 -  void setMousePosition(double xPctPos, double yPctPos, hsUbyte bState);
 -  void setMouseTurnSensitivity(double val);
-+  void setInputState(hsUint16 input_state) { state = input_state; }
-+  hsUint16 getInputState() const { return state; }
    void warp(const hsMatrix44& mat);
  
    hsVector3 getOrigin() const;
@@ -437,11 +406,10 @@ http://plasmaclient.info/mantis/view.php?id=23
  private:
 -  pcAvBrainHuman* brain;
    btRigidBody* body;
--  hsUint16 iState;
+   hsUint16 iState;
 -  hsUint16 mState;
 -  double xMousePctPos;
 -  double yMousePctPos;
-+  hsUint16 state;
    bool invZSpeed;
    bool flyMode;
  };
