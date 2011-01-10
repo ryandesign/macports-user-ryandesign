@@ -204,7 +204,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  // Just from counting patatoes (not scienced)
  const float strafe_speed = 2.f;
  
-@@ -214,16 +201,18 @@
+@@ -214,9 +201,11 @@
  // Standing was measured using fraps video capture, and neroshowtime to determine time, frames count.
  // spinning full circle in 4 sec in city using male avatar in 1st person
  // So 90 deg/sec.
@@ -218,37 +218,7 @@ http://plasmaclient.info/mantis/view.php?id=23
  {
    btVector3 velocity;
    btVector3 strafeVelocity;
- 
-   float zlf;
- 
--  if(flyMode) zlf = 0.f;
-+  if (flyMode) zlf = 0.f;
-   else zlf = 1.f;
- 
-   bool running = ((iState & kISRun) != 0) ^ ((iState & kISAlwaysRun) != 0);
-@@ -240,7 +229,7 @@
-     velocity = btMatrix3x3(body->getWorldTransform().getRotation()) * btVector3(0.f, walk_bwd_speed, 0.f);
-     body->setLinearFactor(btVector3(1.f, 1.f, zlf));
-   } else { // stand still
--    if(!(iState & kISJump)) { // not jumping
-+    if (!(iState & kISJump)) { // not jumping
-       // Note: Strafe should only be permited while NOT falling. Todo : add surface contact detection
-       switch (iState & (kISStrafeLeft|kISStrafeRight)) {
-         case kISStrafeLeft:
-@@ -264,10 +253,10 @@
- 
-   btVector3 angvelocity;
- 
--  switch(iState & (kISStrafeLeft|kISStrafeRight)) {
-+  switch (iState & (kISStrafeLeft|kISStrafeRight)) {
-     case kISStrafeLeft:
-     case kISStrafeRight:
--      if(!(iState & (kISForward|kISBackward|kISJump))) {
-+      if (!(iState & (kISForward|kISBackward|kISJump))) {
-         angvelocity = btVector3(0.f, 0.f, 0.f);
-         break;
-       } // else ignore strafe states and allow rotation
-@@ -276,63 +265,34 @@
+@@ -276,56 +265,27 @@
          float turn_rate;
  
          if(iState & kISForward) {
@@ -322,14 +292,6 @@ http://plasmaclient.info/mantis/view.php?id=23
        }
        break;
    }
- 
-   btScalar z_speed;
- 
--  if(flyMode) z_speed = 0.f;
-+  if (flyMode) z_speed = 0.f;
-   else z_speed = body->getLinearVelocity().getZ();
- 
-   if(iState & kISJump) { // jump : Todo : this is temporary until jump permutation / logic understood (forward standstill jump for example)
 @@ -356,31 +316,6 @@
    body->setAngularVelocity(angvelocity);
  }
@@ -593,14 +555,6 @@ http://plasmaclient.info/mantis/view.php?id=23
      PCPhysMgr::instance().step(t);
      pcRenderer::instance().drawScene();
      if(drawphysics)
-@@ -481,7 +454,6 @@
- //    pcRenderer::instance().drawText(loc);
- 
-     SDL_GL_SwapBuffers(); // TODO: move this into a PCRenderer function
--
-   } while(running);
- 
-   pcClient::instance().writeAWPC();
 --- singletons/pcClient.cpp	2011-01-07 07:26:45.000000000 -0600
 +++ singletons/pcClient.cpp	2011-01-07 07:26:10.000000000 -0600
 @@ -360,10 +360,6 @@
