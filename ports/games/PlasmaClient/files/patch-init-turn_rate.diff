@@ -1,0 +1,11 @@
+--- PCPhysicsHelpers.cpp	2011-01-10 04:54:03.000000000 -0600
++++ PCPhysicsHelpers.cpp	2011-01-10 06:03:18.000000000 -0600
+@@ -273,7 +273,7 @@
+       } // else ignore strafe states and allow rotation
+     default: 
+       {
+-        float turn_rate;
++        float turn_rate = 0.f;
+ 
+         if(iState & kISForward) {
+           if(brain) {
