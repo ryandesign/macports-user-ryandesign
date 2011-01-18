@@ -1,5 +1,5 @@
---- PCKi.cpp.orig	Fri Nov 05 12:29:05 2010 -0800
-+++ PCKi.cpp	Sat Nov 06 12:58:31 2010 -0500
+--- PCKi.cpp.orig	Sun Jan 16 15:49:49 2011 +0100
++++ PCKi.cpp	Tue Jan 18 03:13:39 2011 -0600
 @@ -34,6 +34,8 @@
  
  PC_SINGLETON_IMPL_WITH_CTOR_DTOR(PCKi)
@@ -19,18 +19,18 @@
    if(msgs.size() > 10)
      msgs.pop_front();
  }
---- main.cpp.orig	Fri Nov 05 12:29:05 2010 -0800
-+++ main.cpp	Sat Nov 06 12:58:31 2010 -0500
-@@ -51,6 +51,8 @@
- extern float pounits;
- extern int deMode;
+--- main.cpp.orig	Sun Jan 16 15:49:49 2011 +0100
++++ main.cpp	Tue Jan 18 03:13:39 2011 -0600
+@@ -56,6 +56,8 @@
+ extern double zoom;
+ extern bool zooming;
  
 +FILE *chatlog;
 +
+ double prev_sba = 1.0;
  bool drawfps = true;
  
- int main(int argc, char *argv[])
-@@ -105,6 +107,8 @@
+@@ -121,6 +123,8 @@
    fps.font = arial;
    fps.X = pcClient::instance().getSettings().width - 3*arial->getWidth();
    fps.Y = 5;
@@ -39,7 +39,7 @@
  
  //  FontLine loc;
  //  loc.font = arial;
-@@ -458,6 +462,8 @@
+@@ -614,6 +618,8 @@
  
    pcClient::instance().writeAWPC();
  
