@@ -5,8 +5,8 @@ PortSystem                  1.0
 PortGroup                   cmake 1.0
 
 name                        PlasmaClient
-epoch                       1
-version                     0.0.4-437
+epoch                       2
+version                     0.0.4a-438
 categories                  games
 platforms                   darwin
 maintainers                 ryandesign
@@ -23,7 +23,7 @@ long_description            ${name} is an open-source cross-platform \
 
 fetch.type                  hg
 hg.url                      http://uru.zrax.net/hg/plasmaclient
-hg.tag                      321a5f2b8f82
+hg.tag                      62a8a0017b2a
 
 depends_lib                 port:bullet \
                             port:python26 \
