@@ -3,15 +3,11 @@
 
 PortSystem              1.0
 
-name                    php5
-conflicts               php5-devel php52
-# Keep version of php5 in sync with bundled php5 extension ports.
-# Increment revision of php5-eaccelerator when updating version of php5.
-epoch                   1
-version                 5.3.8
+name                    php54
+set php                 ${name}
+# Increment revision of php54-eaccelerator when updating version of php54.
+version                 5.4.0beta1
 set major               [lindex [split ${version} .] 0]
-set my_name             php${major}
-dist_subdir             ${my_name}
 categories              lang php www
 maintainers             ryandesign jwa
 platforms               darwin freebsd
@@ -25,18 +21,20 @@ long_description        PHP is a widely-used general-purpose scripting \
                         web sites, but can also be used for command-line \
                         scripting.
 
-homepage                http://www.php.net/
-master_sites            php
+homepage                http://qa.php.net/
+master_sites            http://downloads.php.net/ilia/ \
+                        http://downloads.php.net/johannes/ \
+                        http://downloads.php.net/stas/
 
+dist_subdir             php${major}
 distname                php-${version}
 use_bzip2               yes
 
 checksums               [suffix ${distname}] \
-                        rmd160  f18a18e2dfd7ea7885760eec2a05b3c4a15ad9db \
-                        sha256  a1dd06fd5593e97d9a5bd9818d6501d28d3ee8f09b83f0ec78f7cdfc060f3ea2
+                        rmd160  358ae467f1a64e704adbe614acce1a846631d0ed \
+                        sha256  f288855f07d37e84e3e51a8fd9617556155e69fcaf0a84633360ada718226b15
 
-depends_build           port:pkgconfig \
-                        port:autoconf213
+depends_build           port:pkgconfig
 
 depends_lib             path:bin/gsed:gsed \
                         port:libtool \
@@ -52,10 +50,9 @@ patch.pre_args          -p1
 patchfiles              patch-scripts-php-config.in.diff
 
 use_autoconf            yes
-autoconf.cmd            ${prefix}/bin/autoconf213
 
-set phpinidir           ${prefix}/etc/${my_name}
-set extraphpinidir      ${prefix}/var/db/${my_name}
+set phpinidir           ${prefix}/etc/${php}
+set extraphpinidir      ${prefix}/var/db/${php}
 
 destroot.keepdirs       ${destroot}${extraphpinidir}
 
@@ -213,16 +210,16 @@ post-destroot {
     if { [variant_isset apache] } {
         xinstall -m 755 -d ${destroot}${prefix}/libexec/apache \
             ${destroot}${prefix}/etc/apache/extra
-        xinstall -m 755 ${worksrcpath}/libs/libphp5.so ${destroot}${prefix}/libexec/apache/
-        xinstall -m 755 -c ${filespath}/mod_php.conf ${destroot}$prefix/etc/apache/extra
+        xinstall -m 755 ${worksrcpath}/libs/libphp5.so ${destroot}${prefix}/libexec/apache/mod_${php}.so
+        xinstall -m 755 -c ${filespath}/mod_php.conf ${destroot}$prefix/etc/apache/extra/mod_${php}.conf
     }
     
     # Copy the Apache 2.2 module.
     if { [variant_isset apache2] } {
         xinstall -m 755 -d ${destroot}${prefix}/apache2/modules \
             ${destroot}${prefix}/apache2/conf/extra
-        xinstall -m 755 ${worksrcpath}/libs/libphp5.so ${destroot}${prefix}/apache2/modules/
-        xinstall -m 755 -c ${filespath}/mod_php.conf ${destroot}${prefix}/apache2/conf/extra
+        xinstall -m 755 ${worksrcpath}/libs/libphp5.so ${destroot}${prefix}/apache2/modules/mod_${php}.so
+        xinstall -m 755 -c ${filespath}/mod_php.conf ${destroot}${prefix}/apache2/conf/extra/mod_${php}.conf
     }
     
     if { [variant_isset fastcgi] } {
@@ -317,7 +314,7 @@ post-activate {
             ui_msg ""
             ui_msg "To enable PHP in Apache, run"
             ui_msg "  cd ${moduledir}"
-            ui_msg "  ${apxs} -a -e -n \"${my_name}\" lib${my_name}.so"
+            ui_msg "  ${apxs} -a -e -n \"${php}\" lib${php}.so"
         }
     }
     
@@ -331,5 +328,5 @@ variant debug description {Enable debug support (useful to analyze a PHP-related
 test.run                yes
 
 livecheck.type          regex
-livecheck.url           ${homepage}downloads.php
-livecheck.regex         get/php-(5\\.\[0-9.\]+)\\.tar
+livecheck.url           ${homepage}
+livecheck.regex         php-?(5\\.\[0-9.\]+(?:(?:alpha|beta|RC)\\d+|-latest))\\.tar
