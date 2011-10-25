@@ -6,7 +6,7 @@ PortSystem              1.0
 name                    php54
 set php                 ${name}
 # Increment revision of ${php}-eaccelerator when updating version of ${php}.
-version                 5.4.0beta1
+version                 5.4.0beta2
 set major               [lindex [split ${version} .] 0]
 categories              lang php www
 maintainers             ryandesign jwa
@@ -22,17 +22,15 @@ long_description        PHP is a widely-used general-purpose scripting \
                         scripting.
 
 homepage                http://qa.php.net/
-master_sites            http://downloads.php.net/ilia/ \
-                        http://downloads.php.net/johannes/ \
-                        http://downloads.php.net/stas/
+master_sites            http://downloads.php.net/stas/
 
 dist_subdir             php${major}
 distname                php-${version}
 use_bzip2               yes
 
 checksums               [suffix ${distname}] \
-                        rmd160  358ae467f1a64e704adbe614acce1a846631d0ed \
-                        sha256  f288855f07d37e84e3e51a8fd9617556155e69fcaf0a84633360ada718226b15
+                        rmd160  0ee88f511d3390e8448afbe9554d713015e31e95 \
+                        sha256  d67c347142c75c080b306fe9b63359da3c2c00ecfcea097945c569d3f4560226
 
 if {${subport} == "${php}" || ${subport} == "${php}-apache" || ${subport} == "${php}-fastcgi"} {
     
@@ -109,7 +107,7 @@ if {${subport} == "${php}" || ${subport} == "${php}-apache" || ${subport} == "${
                 ui_error "The suhosin variant requires Mac OS X 10.5 or greater."
                 return -code error "incompatible Mac OS X version"
             }
-            set suhosin_available 1
+            set suhosin_available 0
             if {!${suhosin_available}} {
                 ui_error "There is no suhosin patch for PHP ${version} yet. Please check back later."
             }
