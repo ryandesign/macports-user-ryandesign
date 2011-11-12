@@ -32,7 +32,7 @@ checksums               [suffix ${distname}] \
                         rmd160  4cae98d1d388bf18d70cd3041d0c314ac4788c69 \
                         sha256  98f71de2d474c975326fd8452058f741843fe3b7db601f4788ed327adcc7a781
 
-if {${subport} == "${php}" || ${subport} == "${php}-apache" || ${subport} == "${php}-fastcgi"} {
+if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport} == "${php}-fastcgi"} {
     
     ### SAPIs ###
     
