@@ -32,7 +32,7 @@ checksums               [suffix ${distname}] \
                         rmd160  9549bbeb1fd719f6c3d20bda7ede23c5059805a3 \
                         sha256  23f9bac36ff7a3ce9f367e313c2b89a03483238d44ff8a590ae829c7ee1fc748
 
-if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport} == "${php}-fastcgi"} {
+if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport} == "${php}-cgi"} {
     
     ### SAPIs ###
     
@@ -222,10 +222,8 @@ To enable ${subport}, run:
 "
 }
 
-subport ${php}-fastcgi {
-    revision                1
-    
-    description             ${php} FastCGI SAPI
+subport ${php}-cgi {
+    description             ${php} CGI SAPI
     
     long_description        ${description}
     
