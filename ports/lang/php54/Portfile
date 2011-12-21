@@ -32,7 +32,7 @@ checksums               [suffix ${distname}] \
                         rmd160  9549bbeb1fd719f6c3d20bda7ede23c5059805a3 \
                         sha256  23f9bac36ff7a3ce9f367e313c2b89a03483238d44ff8a590ae829c7ee1fc748
 
-if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport} == "${php}-cgi"} {
+if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport} == "${php}-cgi" || ${subport} == "${php}-fpm"} {
     
     ### SAPIs ###
     
@@ -86,8 +86,9 @@ if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport
                         --with-libxml-dir=${prefix} \
                         --with-zlib=${prefix} \
                         --without-pear \
+                        --disable-cgi \
                         --disable-cli \
-                        --disable-cgi
+                        --disable-fpm
     
     # ${php}-mysql +mysqlnd needs mysqlnd support compiled into the SAPI
     configure.env       PHP_MYSQLND_ENABLED=yes
@@ -233,4 +234,17 @@ subport ${php}-cgi {
     build.target            cgi
     
     destroot.target         install-cgi
+}
+
+subport ${php}-fpm {
+    description             ${php} FPM SAPI
+    
+    long_description        ${description}
+    
+    configure.args-delete   --disable-fpm
+    configure.args-append   --enable-fpm
+    
+    build.target            fpm
+    
+    destroot.target         install-fpm
 }
