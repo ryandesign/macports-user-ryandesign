@@ -59,6 +59,7 @@ if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport
     
     configure.args      --mandir=${prefix}/share/man \
                         --infodir=${prefix}/share/info \
+                        --program-suffix=[join [lrange [split ${version} .] 0 1] {}] \
                         --with-config-file-path=${phpinidir} \
                         --with-config-file-scan-dir=${extraphpinidir} \
                         --disable-all \
@@ -133,6 +134,8 @@ if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport
 }
 
 if {${subport} == ${php}} {
+    revision                1
+    
     configure.args-delete   --disable-cli
     configure.args-append   --enable-cli
     
@@ -220,6 +223,8 @@ To enable ${subport}, run:
 }
 
 subport ${php}-fastcgi {
+    revision                1
+    
     description             ${php} FastCGI SAPI
     
     long_description        ${description}
