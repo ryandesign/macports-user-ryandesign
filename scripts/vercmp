@@ -1,0 +1,27 @@
+#!/usr/bin/tclsh
+
+# Runs vercmp with the two version numbers provided to see which is newer.
+
+set prefix /opt/local
+
+source ${prefix}/share/macports/Tcl/macports1.0/macports_fastload.tcl
+package require macports 1.0
+mportinit
+
+if {${argc} != 2} {
+    ui_error "usage: [file tail ${argv0}] version1 version2"
+    exit 1
+}
+
+set version1 [lindex ${argv} 0]
+set version2 [lindex ${argv} 1]
+
+set cmp [vercmp ${version1} ${version2}]
+
+if {${cmp} < 0} {
+    ui_msg "MacPorts considers ${version1} to be less than ${version2}."
+} elseif {${cmp} > 0} {
+    ui_msg "MacPorts considers ${version1} to be greater than ${version2}."
+} else {
+    ui_msg "MacPorts considers ${version1} to be equal to ${version2}."
+}
