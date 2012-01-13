@@ -11,6 +11,7 @@ TOTALPYPORTS=$(echo $NAMES | wc -w)
 PROBLEMPORTS=""
 DEPENDENCYPROBLEMS=0
 DEFAULTVERSIONPROBLEMS=0
+DOCDIRPROBLEMS=0
 for NAME in $NAMES; do
     STUBPORT=py-$NAME
     DEPS=$(port info --depends_lib --depends_build --depends_run --index --line $STUBPORT | sed 's/[^[:space:]]*://g')
@@ -32,26 +33,37 @@ for NAME in $NAMES; do
             PROBLEMPORTS="$PROBLEMPORTS $STUBPORT"
         fi
     fi
+    if [ -n "$(grep -E '\$\{?prefix\}?/share/doc/\$\{?name\}?' $(port file $STUBPORT))" ]; then
+        printf "%s installs documentation that will conflict between subports\n" $STUBPORT
+        DOCDIRPROBLEMS=$(($DOCDIRPROBLEMS + 1))
+        PROBLEMPORTS="$PROBLEMPORTS $STUBPORT"
+    fi
 done
 
-TOTALPROBLEMPORTS=$(($DEPENDENCYPROBLEMS + $DEFAULTVERSIONPROBLEMS))
+TOTALPROBLEMS=$(($DEPENDENCYPROBLEMS + $DEFAULTVERSIONPROBLEMS + $DOCDIRPROBLEMS))
 
 echo
-printf "Out of %d ports using the unified python portgroup, %d have problems.\n" $TOTALPYPORTS $TOTALPROBLEMPORTS
+printf "Out of %d ports using the unified python portgroup, there are %d problems.\n" $TOTALPYPORTS $TOTALPROBLEMS
 
 if [ $DEPENDENCYPROBLEMS -gt 0 ]; then
     echo
-    printf "%d of these have dependency problems. Dependencies should only be declared in subports.\n" $DEPENDENCYPROBLEMS
+    printf "%d ports have dependency problems. Dependencies should only be declared in subports.\n" $DEPENDENCYPROBLEMS
     echo "Enclose dependencies and all other \"real\" port actions in an \"if {\${name} != \${subport}}\" block."
 fi
 
 if [ $DEFAULTVERSIONPROBLEMS -gt 0 ]; then
     echo
-    printf "%d of these have default python version problems. python.default_version needs to be\n" $DEFAULTVERSIONPROBLEMS
+    printf "%d ports have default python version problems. python.default_version needs to be\n" $DEFAULTVERSIONPROBLEMS
     echo "set to one of the values you set in python.versions."
 fi
 
-if [ $TOTALPROBLEMPORTS -gt 0 ]; then
+if [ $DOCDIRPROBLEMS -gt 0 ]; then
+    echo
+    printf "%d ports have documentation directory problems. In ports with subports, documentation\n" $DOCDIRPROBLEMS
+    echo "should be installed into \${prefix}/share/doc/\${subport} rather than \${prefix}/share/doc/\${name}."
+fi
+
+if [ $TOTALPROBLEMS -gt 0 ]; then
     echo
     echo "The maintainers of these ports are:"
     echo
