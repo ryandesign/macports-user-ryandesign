@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Prints a list of all maintainers and a count of how many ports each maintains.
+# This can sometimes be useful for finding maintainer name typos.
+
+port -q info --maintainers --index --line all | tr ',' '\n' | sort | uniq -c
