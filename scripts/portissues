@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Constructs and launches in your default web browser a URL to search
+# the MacPorts issue tracker for issues for the specified port(s),
+# and optionally any dependencies. Will only find tickets that have the
+# Port field filled out correctly.
+
+INCLUDE_DEPS=0
+if [ $# -gt 0 -a "$1" == "--deps" ]; then
+    shift
+    INCLUDE_DEPS=1
+fi
+
+if [ $# -lt 1 ]; then
+    echo "usage: $(basename "$0") [--deps] <portname> [...]" 1>&2
+    exit 1
+fi
+
+PORTS="$@"
+
+if [ $INCLUDE_DEPS -eq 1 ]; then
+    RDEPS=$(port -q rdeps $PORTS | sed /^--$/d) || exit 1
+    PORTS=$(echo $PORTS $RDEPS)
+else
+    port file $PORTS > /dev/null || exit 1
+fi
+
+URL="https://trac.macports.org/report/16?sort=ticket&asc=0&PORT=(^| |,)(${PORTS// /|})(\$| |,)"
+
+open "$URL"
