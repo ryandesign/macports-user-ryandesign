@@ -3,7 +3,7 @@
 # Finds ports that are using the unified python portgroup incorrectly.
 
 # Ports using the unified python portgroup.
-NAMES=$(port info --subports --index --line name:^py- | sed -n -e 's/^py[[:digit:]]*-//' -e 's/,.*$//p')
+NAMES=$(port info --subports --index --line name:^py- | sed -E -n -e 's/^py[[:digit:]]{2}-//' -e 's/,.*$//p')
 
 # Count them.
 TOTALPYPORTS=$(echo $NAMES | wc -w)
