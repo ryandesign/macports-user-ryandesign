@@ -8,7 +8,6 @@ NAMES=$(port info --subports --index --line name:^py- | sed -E -n -e 's/^py[[:di
 # Count them.
 TOTALPYPORTS=$(echo $NAMES | wc -w)
 
-PROBLEMPORTS=0
 DEPENDENCYPROBLEMS=0
 DEFAULTVERSIONPROBLEMS=0
 for NAME in $NAMES; do
@@ -21,21 +20,21 @@ for NAME in $NAMES; do
     
     if [ -z "$DEFAULTVERSION" ]; then
         printf "%s declares dependencies even in the stub port\n" $STUBPORT
-        PROBLEMPORTS=$(($PROBLEMPORTS + 1))
         DEPENDENCYPROBLEMS=$(($DEPENDENCYPROBLEMS + 1))
     else
         # Get the file of the default subport. If the default is set incorrectly, this will be empty.
         FILE=$(port file py$DEFAULTVERSION-$NAME 2>/dev/null)
         if [ -z "$FILE" ]; then
             printf "%s declares default python version %s but does not offer python version %s\n" $STUBPORT $DEFAULTVERSION $DEFAULTVERSION
-            PROBLEMPORTS=$(($PROBLEMPORTS + 1))
             DEFAULTVERSIONPROBLEMS=$(($DEFAULTVERSIONPROBLEMS + 1))
         fi
     fi
 done
 
+TOTALPROBLEMPORTS=$(($DEPENDENCYPROBLEMS + $DEFAULTVERSIONPROBLEMS))
+
 echo
-printf "Out of %d ports using the unified python portgroup, %d have problems.\n" $TOTALPYPORTS $PROBLEMPORTS
+printf "Out of %d ports using the unified python portgroup, %d have problems.\n" $TOTALPYPORTS $TOTALPROBLEMPORTS
 
 if [ $DEPENDENCYPROBLEMS -gt 0 ]; then
     echo
