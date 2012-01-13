@@ -8,6 +8,7 @@ NAMES=$(port info --subports --index --line name:^py- | sed -E -n -e 's/^py[[:di
 # Count them.
 TOTALPYPORTS=$(echo $NAMES | wc -w)
 
+PROBLEMPORTS=""
 DEPENDENCYPROBLEMS=0
 DEFAULTVERSIONPROBLEMS=0
 for NAME in $NAMES; do
@@ -21,12 +22,14 @@ for NAME in $NAMES; do
     if [ -z "$DEFAULTVERSION" ]; then
         printf "%s declares dependencies even in the stub port\n" $STUBPORT
         DEPENDENCYPROBLEMS=$(($DEPENDENCYPROBLEMS + 1))
+        PROBLEMPORTS="$PROBLEMPORTS $STUBPORT"
     else
         # Get the file of the default subport. If the default is set incorrectly, this will be empty.
         FILE=$(port file py$DEFAULTVERSION-$NAME 2>/dev/null)
         if [ -z "$FILE" ]; then
             printf "%s declares default python version %s but does not offer python version %s\n" $STUBPORT $DEFAULTVERSION $DEFAULTVERSION
             DEFAULTVERSIONPROBLEMS=$(($DEFAULTVERSIONPROBLEMS + 1))
+            PROBLEMPORTS="$PROBLEMPORTS $STUBPORT"
         fi
     fi
 done
@@ -46,4 +49,11 @@ if [ $DEFAULTVERSIONPROBLEMS -gt 0 ]; then
     echo
     printf "%d of these have default python version problems. python.default_version needs to be\n" $DEFAULTVERSIONPROBLEMS
     echo "set to one of the values you set in python.versions."
+fi
+
+if [ $TOTALPROBLEMPORTS -gt 0 ]; then
+    echo
+    echo "The maintainers of these ports are:"
+    echo
+    port info --maintainers --index --line $PROBLEMPORTS | tr ',' '\n' | sort -u
 fi
