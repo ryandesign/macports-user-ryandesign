@@ -12,21 +12,22 @@ PROBLEMPORTS=0
 DEPENDENCYPROBLEMS=0
 DEFAULTVERSIONPROBLEMS=0
 for NAME in $NAMES; do
-    DEPS=$(port info --depends_lib --depends_build --depends_run --index --line py-$NAME | sed 's/[^[:space:]]*://g')
+    STUBPORT=py-$NAME
+    DEPS=$(port info --depends_lib --depends_build --depends_run --index --line $STUBPORT | sed 's/[^[:space:]]*://g')
     
     # If the port declares dependencies correctly, get the default python version.
     # If the port declares dependencies incorrectly, this will be empty.
     DEFAULTVERSION=$(echo $DEPS | sed -E -n "s/^py([[:digit:]]{2})-$NAME$/\1/p")
     
     if [ -z "$DEFAULTVERSION" ]; then
-        printf "%s declares dependencies even in the stub port\n" py-$NAME
+        printf "%s declares dependencies even in the stub port\n" $STUBPORT
         PROBLEMPORTS=$(($PROBLEMPORTS + 1))
         DEPENDENCYPROBLEMS=$(($DEPENDENCYPROBLEMS + 1))
     else
         # Get the file of the default subport. If the default is set incorrectly, this will be empty.
         FILE=$(port file py$DEFAULTVERSION-$NAME 2>/dev/null)
         if [ -z "$FILE" ]; then
-            printf "%s declares default python version %s but does not offer python version %s\n" py-$NAME $DEFAULTVERSION $DEFAULTVERSION
+            printf "%s declares default python version %s but does not offer python version %s\n" $STUBPORT $DEFAULTVERSION $DEFAULTVERSION
             PROBLEMPORTS=$(($PROBLEMPORTS + 1))
             DEFAULTVERSIONPROBLEMS=$(($DEFAULTVERSIONPROBLEMS + 1))
         fi
