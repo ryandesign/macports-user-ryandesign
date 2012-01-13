@@ -12,6 +12,7 @@ PROBLEMPORTS=""
 DEPENDENCYPROBLEMS=0
 DEFAULTVERSIONPROBLEMS=0
 DOCDIRPROBLEMS=0
+LIVECHECKPROBLEMS=0
 for NAME in $NAMES; do
     STUBPORT=py-$NAME
     STUBFILE="$(port file $STUBPORT)"
@@ -40,9 +41,14 @@ for NAME in $NAMES; do
         DOCDIRPROBLEMS=$(($DOCDIRPROBLEMS + 1))
         PROBLEMPORTS="$PROBLEMPORTS $STUBPORT"
     fi
+    if [ -z "$(grep -E 'livecheck\.type[[:space:]]+none' "$STUBFILE")" ]; then
+        printf "%s enables livecheck even in the subports\n" $STUBPORT
+        LIVECHECKPROBLEMS=$(($LIVECHECKPROBLEMS + 1))
+        PROBLEMPORTS="$PROBLEMPORTS $STUBPORT"
+    fi
 done
 
-TOTALPROBLEMS=$(($DEPENDENCYPROBLEMS + $DEFAULTVERSIONPROBLEMS + $DOCDIRPROBLEMS))
+TOTALPROBLEMS=$(($DEPENDENCYPROBLEMS + $DEFAULTVERSIONPROBLEMS + $DOCDIRPROBLEMS + $LIVECHECKPROBLEMS))
 
 echo
 printf "Out of %d ports using the unified python portgroup, there are %d problems.\n" $TOTALPYPORTS $TOTALPROBLEMS
@@ -63,6 +69,13 @@ if [ $DOCDIRPROBLEMS -gt 0 ]; then
     echo
     printf "%d ports have documentation directory problems. In ports with subports, documentation\n" $DOCDIRPROBLEMS
     echo "should be installed into \${prefix}/share/doc/\${subport} rather than \${prefix}/share/doc/\${name}."
+fi
+
+if [ $LIVECHECKPROBLEMS -gt 0 ]; then
+    echo
+    printf "%d ports have livecheck problems. Livecheck should only be enabled in the stub port.\n" $LIVECHECKPROBLEMS
+    echo "Livecheck directives should be enclosed in an \"if {\${name} == \${subport}}\" block;"
+    echo "in the \"else\" part, set livecheck.type to none."
 fi
 
 if [ $TOTALPROBLEMS -gt 0 ]; then
