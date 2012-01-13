@@ -3,30 +3,30 @@
 # Finds ports that are using the unified python portgroup incorrectly.
 
 # Ports using the unified python portgroup.
-PYPORTS=$(port info --subports --index --line name:^py- | sed -n -e 's/^py[[:digit:]]*-//' -e 's/,.*$//p')
+NAMES=$(port info --subports --index --line name:^py- | sed -n -e 's/^py[[:digit:]]*-//' -e 's/,.*$//p')
 
 # Count them.
-TOTALPYPORTS=$(echo $PYPORTS | wc -w)
+TOTALPYPORTS=$(echo $NAMES | wc -w)
 
 PROBLEMPORTS=0
 DEPENDENCYPROBLEMS=0
 DEFAULTVERSIONPROBLEMS=0
-for PORT in $PYPORTS; do
-    DEPS=$(port info --depends_lib --depends_build --depends_run --index --line py-$PORT | sed 's/[^[:space:]]*://g')
+for NAME in $NAMES; do
+    DEPS=$(port info --depends_lib --depends_build --depends_run --index --line py-$NAME | sed 's/[^[:space:]]*://g')
     
     # If the port declares dependencies correctly, get the default python version.
     # If the port declares dependencies incorrectly, this will be empty.
-    DEFAULTVERSION=$(echo $DEPS | sed -E -n "s/^py([[:digit:]]{2})-$PORT$/\1/p")
+    DEFAULTVERSION=$(echo $DEPS | sed -E -n "s/^py([[:digit:]]{2})-$NAME$/\1/p")
     
     if [ -z "$DEFAULTVERSION" ]; then
-        printf "%s declares dependencies even in the stub port\n" py-$PORT
+        printf "%s declares dependencies even in the stub port\n" py-$NAME
         PROBLEMPORTS=$(($PROBLEMPORTS + 1))
         DEPENDENCYPROBLEMS=$(($DEPENDENCYPROBLEMS + 1))
     else
         # Get the file of the default subport. If the default is set incorrectly, this will be empty.
-        FILE=$(port file py$DEFAULTVERSION-$PORT 2>/dev/null)
+        FILE=$(port file py$DEFAULTVERSION-$NAME 2>/dev/null)
         if [ -z "$FILE" ]; then
-            printf "%s declares default python version %s but does not offer python version %s\n" py-$PORT $DEFAULTVERSION $DEFAULTVERSION
+            printf "%s declares default python version %s but does not offer python version %s\n" py-$NAME $DEFAULTVERSION $DEFAULTVERSION
             PROBLEMPORTS=$(($PROBLEMPORTS + 1))
             DEFAULTVERSIONPROBLEMS=$(($DEFAULTVERSIONPROBLEMS + 1))
         fi
