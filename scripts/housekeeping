@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Performs some MacPorts housekeeping tasks that should be run periodically.
+
+if [ $(id -u) -ne 0 ]; then
+    echo "$(basename "$0") must be run as root" 1>&2
+    exit 1
+fi
+
+PREFIX="$(which port | sed 's,/bin/port$,,')"
+
+if [ ! -d "$PREFIX" ]; then
+    echo "port command not found" 1>&2
+    exit 1
+fi
+
+# Delete distfiles more than 2 years old.
+find "$PREFIX/var/macports/distfiles/" -type f -mtime +730 -print -delete
+
+# Delete incomplete distfile downloads more than 1 day old.
+find "$PREFIX/var/macports/distfiles/" -type f -name '*.TMP' -mtime +1 -print -delete
+
+# Delete empty distfile directories.
+find "$PREFIX/var/macports/distfiles/" -type d -empty -print -delete
+
+# Delete incomplete package downloads more than 1 day old.
+find "$PREFIX/var/macports/incoming/" -type f -name '*.TMP' -mtime +1 -print -delete
+
+# Delete logs more than 1 month old.
+find "$PREFIX/var/macports/logs/" -type f -mtime +30 -print -delete
+
+# Delete empty log directories.
+find "$PREFIX/var/macports/logs/" -type d -empty -print -delete
+
+# Delete files moved aside by "sudo port -f activate".
+find "$PREFIX" -path "$PREFIX/var/macports" -prune -o -regex '.*\.mp_[0-9]*$' -print -delete
