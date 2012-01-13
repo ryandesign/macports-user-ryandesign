@@ -42,7 +42,7 @@ if [ $DEPENDENCYPROBLEMS -gt 0 ]; then
     echo "Enclose dependencies and all other \"real\" port actions in an \"if {\${name} != \${subport}}\" block."
 fi
 
-if [ $DEPENDENCYPROBLEMS -gt 0 ]; then
+if [ $DEFAULTVERSIONPROBLEMS -gt 0 ]; then
     echo
     printf "%d of these have default python version problems. python.default_version needs to be\n" $DEFAULTVERSIONPROBLEMS
     echo "set to one of the values you set in python.versions."
