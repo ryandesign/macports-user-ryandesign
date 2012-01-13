@@ -14,6 +14,8 @@ DEFAULTVERSIONPROBLEMS=0
 DOCDIRPROBLEMS=0
 for NAME in $NAMES; do
     STUBPORT=py-$NAME
+    STUBFILE="$(port file $STUBPORT)"
+    
     DEPS=$(port info --depends_lib --depends_build --depends_run --index --line $STUBPORT | sed 's/[^[:space:]]*://g')
     
     # If the port declares dependencies correctly, get the default python version.
@@ -26,14 +28,14 @@ for NAME in $NAMES; do
         PROBLEMPORTS="$PROBLEMPORTS $STUBPORT"
     else
         # Get the file of the default subport. If the default is set incorrectly, this will be empty.
-        FILE=$(port file py$DEFAULTVERSION-$NAME 2>/dev/null)
+        FILE="$(port file py$DEFAULTVERSION-$NAME 2>/dev/null)"
         if [ -z "$FILE" ]; then
             printf "%s declares default python version %s but does not offer python version %s\n" $STUBPORT $DEFAULTVERSION $DEFAULTVERSION
             DEFAULTVERSIONPROBLEMS=$(($DEFAULTVERSIONPROBLEMS + 1))
             PROBLEMPORTS="$PROBLEMPORTS $STUBPORT"
         fi
     fi
-    if [ -n "$(grep -E '\$\{?prefix\}?/share/doc/\$\{?name\}?' $(port file $STUBPORT))" ]; then
+    if [ -n "$(grep -E '\$\{?prefix\}?/share/doc/\$\{?name\}?' "$STUBFILE")" ]; then
         printf "%s installs documentation that will conflict between subports\n" $STUBPORT
         DOCDIRPROBLEMS=$(($DOCDIRPROBLEMS + 1))
         PROBLEMPORTS="$PROBLEMPORTS $STUBPORT"
