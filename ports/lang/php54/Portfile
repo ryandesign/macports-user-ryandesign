@@ -32,6 +32,10 @@ checksums               [suffix ${distname}] \
                         rmd160  afa69be764c921ce6e5b9b135758b3b8a27d0658 \
                         sha256  660298da371f4827714aad10f1e28e19fcae290c6abb7478207bfbcef0827028
 
+if {${configure.compiler} == "clang"} {
+    configure.compiler llvm-gcc-4.2
+}
+
 if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport} == "${php}-cgi" || ${subport} == "${php}-fpm"} {
     
     ### SAPIs ###
