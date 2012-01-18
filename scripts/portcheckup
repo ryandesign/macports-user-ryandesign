@@ -2,8 +2,8 @@
 <?php
 
 // Takes the port's CHECKsums and version and UPdates them to those of the
-// specified version. Does not work for ports that use the github portgroup,
-// or for ports that use the php5 portgroup and install multiple modules.
+// specified version. Uses the same checksum types the port used before.
+// Removes any revision lines. Preserves the port's existing whitespace.
 
 define('PROG', basename($_SERVER['argv'][0]));
 
@@ -38,10 +38,12 @@ empty($portfile) && error(sprintf(_('port %s does not exist'), $port));
 $status = rtrim(shell_exec('svn st ' . escapeshellarg($portfile)));
 //empty($status) || error(sprintf(_('port %s has modifications'), $port));
 
+$old_version = rtrim(shell_exec('port info --version --line ' . escapeshellarg($port)));
+
 $portfile_text = file_get_contents($portfile);
 
-$portfile_text = preg_replace('/(?m)^(version\s+|[a-z0-9]+\.setup\s+\S+\s+)\S+(.*)$/', '${1}' . $version . '${2}', $portfile_text);
-$portfile_text = preg_replace('/(?m)^revision\s.+$\n/', '', $portfile_text);
+$portfile_text = preg_replace('/(?m)^(\s*(?:version\s+|[a-z0-9]+\.setup\s+).*)' . preg_quote($old_version, '/') . '(.*)$/', '${1}' . $version . '${2}', $portfile_text);
+$portfile_text = preg_replace('/(?m)^\s*revision\s+\d+\s*$\n/', '', $portfile_text);
 file_put_contents($portfile, $portfile_text);
 
 // Prevent "Portfile is from the future - check date and time of your system".
