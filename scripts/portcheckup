@@ -1,0 +1,86 @@
+#!/usr/bin/env php
+<?php
+
+// Takes the port's CHECKsums and version and UPdates them to those of the
+// specified version. Does not work for ports that use the github portgroup,
+// or for ports that use the php5 portgroup and install multiple modules.
+
+define('PROG', basename($_SERVER['argv'][0]));
+
+if (!function_exists('_')) {
+    function _($msg) {
+        return $msg;
+    }
+}
+
+function error($msg) {
+    fwrite(STDERR, PROG . ': ' . $msg . "\n");
+    exit(1);
+}
+
+function usage() {
+    fwrite(STDERR, sprintf(_('usage: %s <port> <version>'), PROG) . "\n");
+    exit(1);
+}
+
+if (3 != $_SERVER['argc']) {
+    usage();
+}
+
+// Get password early.
+//shell_exec('sudo echo');
+
+list(, $port, $version) = $_SERVER['argv'];
+
+$portfile = rtrim(shell_exec('port file ' . escapeshellarg($port) . ' 2>/dev/null'));
+empty($portfile) && error(sprintf(_('port %s does not exist'), $port));
+
+$status = rtrim(shell_exec('svn st ' . escapeshellarg($portfile)));
+//empty($status) || error(sprintf(_('port %s has modifications'), $port));
+
+$portfile_text = file_get_contents($portfile);
+
+$portfile_text = preg_replace('/(?m)^(version\s+|[a-z0-9]+\.setup\s+\S+\s+)\S+(.*)$/', '${1}' . $version . '${2}', $portfile_text);
+$portfile_text = preg_replace('/(?m)^revision\s.+$\n/', '', $portfile_text);
+file_put_contents($portfile, $portfile_text);
+
+// Prevent "Portfile is from the future - check date and time of your system".
+sleep(2);
+
+//system('sudo port -v fetch ' . escapeshellarg($port));
+system('port -v fetch ' . escapeshellarg($port));
+
+function get_port_checksums($port) {
+    //$new_checksums_text = shell_exec('sudo port -v checksum ' . escapeshellarg($port));
+    $new_checksums_text = shell_exec('port -v checksum ' . escapeshellarg($port) . ' 2>/dev/null');
+    $algorithms = array('md5', 'sha1', 'rmd160', 'sha256');
+    $algorithms_match = '(' . join('|', $algorithms) . ')';
+    preg_match_all('/(?m)^(?:checksums)?\s+((?:[^ ]+\s+\\\\)?(?:\s+' . $algorithms_match . '\s+[0-9a-f]+\s+\\\\?)+)/', $new_checksums_text, $matches) || error(sprintf(_('couldn\'t find checksums in output of "port -v checksum %s"'), $port));
+    list(, $file_checksums_texts) = $matches;
+    $new_checksums_array = array();
+    foreach ($file_checksums_texts as $i => $file_checksums_text) {
+        preg_match_all('/\s' . $algorithms_match . '\s+([0-9a-f]+)/', $file_checksums_text, $matches) || error(sprintf(_('couldn\'t find checksums for distfile %1$d for port %2$s'), 1 + $i, $port));
+        list(, $file_checksum_algorithms, $file_checksums_array) = $matches;
+        foreach ($file_checksum_algorithms as $j => $file_checksum_algorithm) {
+            $new_checksums_array[$i][$file_checksum_algorithm] = $file_checksums_array[$j];
+        }
+    }
+    return $new_checksums_array;
+}
+
+// Unique string that will not occur in a Portfile that we can use to obfuscate
+// the algorithm in the Portfile while we're working on it, then remove later.
+$unique_string = 'PORT-CHECKUP-STRING';
+
+$checksums = get_port_checksums($port);
+foreach ($checksums as $i => $file_checksums) {
+    foreach ($file_checksums as $algorithm => $file_checksum) {
+        $portfile_text = preg_replace('/(\s)' . $algorithm . '(\s+)[0-9a-f]+/', '${1}' . substr($algorithm, 0, 1) . $unique_string . substr($algorithm, 1) . '${2}' . $file_checksum, $portfile_text, 1);
+    }
+}
+$portfile_text = str_replace($unique_string, '', $portfile_text);
+file_put_contents($portfile, $portfile_text);
+
+echo '--->  ' . sprintf(_('Updated version and checksums for %s'), $port) . "\n";
+system('svn di ' . escapeshellarg($portfile));
+system('port clean ' . escapeshellarg($port));
