@@ -16,5 +16,5 @@ esac
 
 echo "$PROG $@" 1>&2
 echo "$PROG: Error: You should be using \${configure.$VAR}" 1>&2
-echo "See http://trac.macports.org/wiki/UsingTheRightCompiler" 1>&2
+echo "See https://trac.macports.org/wiki/UsingTheRightCompiler" 1>&2
 exit 1
