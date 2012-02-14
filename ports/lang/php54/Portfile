@@ -8,6 +8,7 @@ set php                 ${name}
 # Increment revision of ${php}-eaccelerator when updating version of ${php}.
 version                 5.4.0RC7
 set major               [lindex [split ${version} .] 0]
+set suffix              [join [lrange [split ${version} .] 0 1] {}]
 categories              lang php www
 maintainers             ryandesign jwa
 platforms               darwin freebsd
@@ -63,7 +64,7 @@ if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport
     
     configure.args      --mandir=${prefix}/share/man \
                         --infodir=${prefix}/share/info \
-                        --program-suffix=[join [lrange [split ${version} .] 0 1] {}] \
+                        --program-suffix=${suffix} \
                         --includedir=${prefix}/include/${php} \
                         --libdir=${prefix}/lib/${php} \
                         --with-config-file-path=${phpinidir} \
@@ -136,7 +137,7 @@ if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport
     }
     
     if {${subport} != ${php}} {
-        notes-append "If this is your first install, you need to activate ${php} in your web server."
+        notes-append "If this is your first install, you need to enable ${subport} in your web server."
     }
 }
 
@@ -241,14 +242,54 @@ subport ${php}-cgi {
 }
 
 subport ${php}-fpm {
+    revision                1
+    
     description             ${php} FPM SAPI
     
     long_description        ${description}
     
+    set fpmuser             nobody
+    set fpmgroup            nobody
+    
+    patchfiles-append       patch-sapi-fpm-php-fpm.conf.in.diff
+    
+    post-patch {
+        reinplace "s|@PHP@|${php}|g" ${worksrcpath}/sapi/fpm/php-fpm.conf.in
+    }
+    
     configure.args-delete   --disable-fpm
-    configure.args-append   --enable-fpm
+    configure.args-append   --enable-fpm \
+                            --sysconfdir=${phpinidir} \
+                            --with-fpm-user=${fpmuser} \
+                            --with-fpm-group=${fpmgroup}
     
     build.target            fpm
     
     destroot.target         install-fpm
+    
+    destroot.keepdirs       ${destroot}${prefix}/var/log/${php} \
+                            ${destroot}${prefix}/var/run/${php}
+    
+    post-destroot {
+        xinstall -d -o ${fpmuser} -g ${fpmgroup} ${destroot}${prefix}/var/log/${php} ${destroot}${prefix}/var/run/${php}
+    }
+    
+    startupitem.create      yes
+    startupitem.executable  ${prefix}/sbin/php-fpm${suffix}
+    
+    if {![file exists ${phpinidir}/php-fpm.conf]} {
+        notes-append "
+
+To use ${subport}, copy\
+${phpinidir}/php-fpm.conf.default to\
+${phpinidir}/php-fpm.conf and make changes if desired.
+"
+    } else {
+        notes-append "
+
+You may need to update your php-fpm.conf for any changes that have been made\
+in this version of ${subport}. Compare ${phpinidir}/php-fpm.conf with\
+${phpinidir}/php-fpm.conf.default.
+"
+    }
 }
