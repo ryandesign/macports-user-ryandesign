@@ -5,8 +5,9 @@ PortSystem              1.0
 
 name                    php54
 set php                 ${name}
+epoch                   1
 # Increment revision of ${php}-eaccelerator when updating version of ${php}.
-version                 5.4.0RC8
+version                 5.4.0
 set major               [lindex [split ${version} .] 0]
 set suffix              [join [lrange [split ${version} .] 0 1] {}]
 categories              lang php www
@@ -22,16 +23,16 @@ long_description        PHP is a widely-used general-purpose scripting \
                         web sites, but can also be used for command-line \
                         scripting.
 
-homepage                http://qa.php.net/
-master_sites            http://downloads.php.net/stas/
+homepage                http://www.php.net/
+master_sites            php
 
 dist_subdir             php${major}
 distname                php-${version}
 use_bzip2               yes
 
 checksums               [suffix ${distname}] \
-                        rmd160  618b9526094c2e7375b272f69779335dfdb68946 \
-                        sha256  77ee8ae882a38ad31c9a034b90fa635c417853c99686e7f36887d381a5f73806
+                        rmd160  7842f4f2b0aa064e10c82b5702cb8333bcb97f24 \
+                        sha256  5a6402b53aeebaccdb28d314121a68c3962a46d43457c82249bc9f4aaf516a9d
 
 if {${configure.compiler} == "clang"} {
     configure.compiler llvm-gcc-4.2
@@ -179,8 +180,8 @@ ${phpinidir}/php.ini-production (if this is a production server).
     }
     
     livecheck.type          regex
-    livecheck.url           ${homepage}
-    livecheck.regex         php-?(5\\.\[0-9.\]+(?:(?:alpha|beta|RC)\\d+|-latest))\\.tar
+    livecheck.url           ${homepage}downloads.php
+    livecheck.regex         get/php-(5\\.\[0-9.\]+)\\.tar
 } else {
     depends_lib-append      port:${php}
     
