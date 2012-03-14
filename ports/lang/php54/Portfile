@@ -38,7 +38,9 @@ if {${configure.compiler} == "clang"} {
     configure.compiler llvm-gcc-4.2
 }
 
-if {${subport} == "${php}" || ${subport} == "${php}-apache2handler" || ${subport} == "${php}-cgi" || ${subport} == "${php}-fpm"} {
+set sapi_subports       [list ${php} ${php}-apache2handler ${php}-cgi ${php}-fpm]
+
+if {-1 != [lsearch -exact ${sapi_subports} ${subport}]} {
     
     ### SAPIs ###
     
@@ -871,7 +873,7 @@ subport ${php}-zip {
     depends_lib-append      port:zlib
 }
 
-if {${subport} != "${php}" && ${subport} != "${php}-apache2handler" && ${subport} != "${php}-cgi" && ${subport} != "${php}-fpm"} {
+if {-1 == [lsearch -exact ${sapi_subports} ${subport}]} {
     php.rootname [regsub "^${php}-" ${subport} ""]
     if {![info exists php.extensions]} {
         php.extensions ${php.rootname}
