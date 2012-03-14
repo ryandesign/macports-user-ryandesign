@@ -4,6 +4,7 @@
 PortSystem              1.0
 
 name                    php54
+set subport             [string tolower ${subport}]
 set php                 ${name}
 epoch                   1
 # Increment revision of ${php}-eaccelerator when updating version of ${php}.
