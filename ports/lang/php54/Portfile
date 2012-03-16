@@ -474,7 +474,7 @@ subport ${php}-ldap {
     
     description             a PHP interface to LDAP
     
-    long_description        ${name} is ${description}, the Lightweight Directory \
+    long_description        ${subport} is ${description}, the Lightweight Directory \
                             Access Protocol, which is used to access Directory \
                             Servers.
     
