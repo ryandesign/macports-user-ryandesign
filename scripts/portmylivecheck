@@ -8,7 +8,11 @@
 HANDLE=ryandesign
 JOBS=8
 
-TMPFILE=$(mktemp -t /tmp)
+if [ -z "$TMPDIR" ]; then
+    TMPDIR=/tmp
+fi
+
+TMPFILE="$(mktemp "$TMPDIR/portmylivecheck.XXXXXXXXXX")"
 
 PORTS=$(port echo '(' \
 'maintainer:(\s|^)'$HANDLE'(\s|$)' or \
@@ -17,16 +21,16 @@ PORTS=$(port echo '(' \
 | sed -E 's/ +//g' \
 | tr '\n' ' ')
 
-echo "all: $PORTS" > $TMPFILE
-echo >> $TMPFILE
-echo ".PHONY: $PORTS" >> $TMPFILE
+echo "all: $PORTS" > "$TMPFILE"
+echo >> "$TMPFILE"
+echo ".PHONY: $PORTS" >> "$TMPFILE"
 
 for PORT in $PORTS; do
-    echo >> $TMPFILE
-    echo "$PORT:" >> $TMPFILE
-    echo $'\t'"port livecheck $PORT" >> $TMPFILE
+    echo >> "$TMPFILE"
+    echo "$PORT:" >> "$TMPFILE"
+    echo $'\t'"port livecheck $PORT" >> "$TMPFILE"
 done
 
-make -f $TMPFILE -j $JOBS -s || exit $?
+make -f "$TMPFILE" -j $JOBS -s || exit $?
 
-rm -f $TMPFILE
+rm -f "$TMPFILE"
