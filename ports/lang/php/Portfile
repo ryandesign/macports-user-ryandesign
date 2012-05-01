@@ -76,24 +76,24 @@ set subport_branch      [branch_from_subport]
 # Remember to increment revision of ${php}-eaccelerator when updating version of ${php}.
 switch ${subport_branch} {
     5.3 {
-        version         5.3.10
+        version         5.3.11
         set suhosin_available       yes
         set suhosin_patch_version   5.3.9-0.9.10
         set suhosin_patch           suhosin-patch-${suhosin_patch_version}.patch.gz
         checksums       [suffix ${distname}] \
-                        rmd160  acab30a19b340f21a64e06b524906f2b064dd1c9 \
-                        sha256  339157af2b386534597d287da292f2545e81d9b452e8b3fe525fb2c534ff344a \
+                        rmd160  cdad550e94cb911fa68b99acba2a5925d0848cf3 \
+                        sha256  b4174c97ca8d8bcf4b52b8b9ef2c2f35e1b611a5a660e02d7cd3edf263a6bd5d \
                         ${suhosin_patch} \
                         rmd160  ce43921fd9b183b154713ecda98294f6c68d5f22 \
                         sha256  4438caeab0a10c6c94aee9f7eaa703f5799f97d4e0579f43a947bb7314e38317
     }
     5.4 {
         epoch           1
-        version         5.4.0
+        version         5.4.1
         set suhosin_available       no
         checksums       [suffix ${distname}] \
-                        rmd160  7842f4f2b0aa064e10c82b5702cb8333bcb97f24 \
-                        sha256  5a6402b53aeebaccdb28d314121a68c3962a46d43457c82249bc9f4aaf516a9d
+                        rmd160  9d2f0b9c43eba65ca0882d72f44d3613f2a3ecc7 \
+                        sha256  0b191b9e5466e99b3094aefdd1fbe9b21947ccc5be461f20eb20d9052f2a12ea
     }
 }
 
