@@ -132,7 +132,7 @@ if {[is_sapi_subport]} {
     
     # Use -p1 to accommodate the Suhosin patch
     patch.pre_args      -p1
-    patchfiles          patch-scripts-php-config.in.diff
+    patchfiles          patch-${php}-scripts-php-config.in.diff
     
     if {${configure.compiler} == "clang"} {
         configure.compiler llvm-gcc-4.2
@@ -346,7 +346,7 @@ subport ${php}-fpm {
     set fpmuser             nobody
     set fpmgroup            nobody
     
-    patchfiles-append       patch-sapi-fpm-php-fpm.conf.in.diff
+    patchfiles-append       patch-${php}-sapi-fpm-php-fpm.conf.in.diff
     
     post-patch {
         reinplace "s|@PHP@|${php}|g" ${worksrcpath}/sapi/fpm/php-fpm.conf.in
@@ -669,7 +669,7 @@ subport ${php}-odbc {
     variant iodbc conflicts unixodbc description {Use iODBC} {
         depends_lib-append      port:libiodbc
         
-        patchfiles-append       patch-iODBC.diff
+        patchfiles-append       patch-${php}-iODBC.diff
         
         configure.args-append   --with-iODBC=${prefix} \
                                 --with-pdo-odbc=iODBC,${prefix}
@@ -678,7 +678,7 @@ subport ${php}-odbc {
     variant unixodbc conflicts iodbc description {Use unixODBC} {
         depends_lib-append      port:unixODBC
         
-        patchfiles-append       patch-unixODBC.diff
+        patchfiles-append       patch-${php}-unixODBC.diff
         
         configure.args-append   --with-unixODBC=${prefix} \
                                 --with-pdo-odbc=unixODBC,${prefix}
