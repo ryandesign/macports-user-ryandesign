@@ -3,19 +3,16 @@
 
 PortSystem              1.0
 
-name                    php54
-set subport             [string tolower ${subport}]
-set php                 ${name}
-epoch                   1
-# Increment revision of ${php}-eaccelerator when updating version of ${php}.
-version                 5.4.0
-set major               [lindex [split ${version} .] 0]
-set suffix              [join [lrange [split ${version} .] 0 1] {}]
+name                    php
 categories              lang php www
-maintainers             ryandesign jwa
 platforms               darwin freebsd
+maintainers             ryandesign jwa
 license                 PHP-3.01
+homepage                http://www.php.net/
+master_sites            php
 use_parallel_build      yes
+use_bzip2               yes
+livecheck.type          none
 
 description             PHP: Hypertext Preprocessor
 
@@ -24,24 +21,96 @@ long_description        PHP is a widely-used general-purpose scripting \
                         web sites, but can also be used for command-line \
                         scripting.
 
-homepage                http://www.php.net/
-master_sites            php
+# The list of PHP branches this port provides, sorted in ascending order.
+set branches            [lsort [list 5.3 5.4]]
 
-dist_subdir             php${major}
-distname                php-${version}
-use_bzip2               yes
+# Fix for users specifying the subport name with the wrong case.
+set subport             [string tolower ${subport}]
 
-checksums               [suffix ${distname}] \
-                        rmd160  7842f4f2b0aa064e10c82b5702cb8333bcb97f24 \
-                        sha256  5a6402b53aeebaccdb28d314121a68c3962a46d43457c82249bc9f4aaf516a9d
-
-if {${configure.compiler} == "clang"} {
-    configure.compiler llvm-gcc-4.2
+# Returns true if the subport is a SAPI, false otherwise (extension, stub port).
+proc is_sapi_subport {} {
+    global name subport
+    if {${name} == ${subport}} {
+        return no
+    }
+    if {[regexp {^php\d+$} ${subport}]} {
+        return yes
+    }
+    regexp {^php\d+-(.+)$} ${subport} -> rootname
+    return [expr {-1 != [lsearch -exact [list apache2handler cgi fpm] ${rootname}]}]
 }
 
-set sapi_subports       [list ${php} ${php}-apache2handler ${php}-cgi ${php}-fpm]
+# Returns true if the subport is an extension, false otherwise (SAPI, stub port).
+proc is_extension_subport {} {
+    global name subport
+    if {${name} == ${subport}} {
+        return no
+    }
+    return [expr {![is_sapi_subport]}]
+}
 
-if {-1 != [lsearch -exact ${sapi_subports} ${subport}]} {
+# Calculate suffix from given branch.
+proc suffix_from_branch {b} {
+    return [strsed ${b} {g/\\.//}]
+}
+
+# Calculate branch from given suffix.
+proc branch_from_suffix {s} {
+    return [string index ${s} 0].[string range ${s} 1 end]
+}
+
+# Calculate branch from subport.
+proc branch_from_subport {} {
+    global branches name subport
+    # For the stub port, use the latest branch.
+    if {${name} == ${subport}} {
+        return [lindex ${branches} end]
+    }
+    # For the subports, get the branch from ${subport}.
+    regexp {^php(\d+)} ${subport} -> suffix
+    return [branch_from_suffix ${suffix}]
+}
+
+set subport_branch      [branch_from_subport]
+
+# Remember to increment revision of ${php}-eaccelerator when updating version of ${php}.
+switch ${subport_branch} {
+    5.3 {
+        version         5.3.10
+        set suhosin_available       yes
+        set suhosin_patch_version   5.3.9-0.9.10
+        set suhosin_patch           suhosin-patch-${suhosin_patch_version}.patch.gz
+        checksums       [suffix ${distname}] \
+                        rmd160  acab30a19b340f21a64e06b524906f2b064dd1c9 \
+                        sha256  339157af2b386534597d287da292f2545e81d9b452e8b3fe525fb2c534ff344a \
+                        ${suhosin_patch} \
+                        rmd160  ce43921fd9b183b154713ecda98294f6c68d5f22 \
+                        sha256  4438caeab0a10c6c94aee9f7eaa703f5799f97d4e0579f43a947bb7314e38317
+    }
+    5.4 {
+        epoch           1
+        version         5.4.0
+        set suhosin_available       no
+        checksums       [suffix ${distname}] \
+                        rmd160  7842f4f2b0aa064e10c82b5702cb8333bcb97f24 \
+                        sha256  5a6402b53aeebaccdb28d314121a68c3962a46d43457c82249bc9f4aaf516a9d
+    }
+}
+
+# Iterate through branches in reverse order, so that the list of subports in
+# "port info" will show newer versions before older versions.
+set i [llength ${branches}]
+while {[incr i -1] >= 0} {
+
+set branch              [lindex ${branches} ${i}]
+set major               [lindex [split ${branch} .] 0]
+set php                 php[suffix_from_branch ${branch}]
+
+if {[regexp "^${php}" ${subport}]} {
+
+dist_subdir             php${major}
+
+if {[is_sapi_subport]} {
     
     ### SAPIs ###
     
@@ -65,14 +134,16 @@ if {-1 != [lsearch -exact ${sapi_subports} ${subport}]} {
     patch.pre_args      -p1
     patchfiles          patch-scripts-php-config.in.diff
     
-    use_autoconf        yes
+    if {${configure.compiler} == "clang"} {
+        configure.compiler llvm-gcc-4.2
+    }
     
     set phpinidir       ${prefix}/etc/${php}
     set extraphpinidir  ${prefix}/var/db/${php}
     
     configure.args      --mandir=${prefix}/share/man \
                         --infodir=${prefix}/share/info \
-                        --program-suffix=${suffix} \
+                        --program-suffix=[suffix_from_branch ${branch}] \
                         --includedir=${prefix}/include/${php} \
                         --libdir=${prefix}/lib/${php} \
                         --with-config-file-path=${phpinidir} \
@@ -124,24 +195,18 @@ if {-1 != [lsearch -exact ${sapi_subports} ${subport}]} {
                 ui_error "The suhosin variant requires Mac OS X 10.5 or greater."
                 return -code error "incompatible Mac OS X version"
             }
-            set suhosin_available 0
-            if {!${suhosin_available}} {
+            if {![tbool ${suhosin_available}]} {
                 ui_error "There is no suhosin patch for PHP ${version} yet. Please check back later."
             }
             if {![file exists ${extraphpinidir}/suhosin.ini]} {
                 ui_msg "You may also be interested in the suhosin extension, a related but different piece of software. See the ${php}-suhosin port."
             }
-            if {!${suhosin_available}} {
+            if {![tbool ${suhosin_available}]} {
                 return -code error "unavailable variant"
             }
         }
-        set suhosin_patch_version   5.3.7-0.9.10
-        set suhosin_patch           suhosin-patch-${suhosin_patch_version}.patch.gz
         patch_sites-append          http://download.suhosin.org/
         patchfiles-append           ${suhosin_patch}
-        checksums-append            ${suhosin_patch} \
-                                    rmd160  19f789bf49a5fed2cd88b199fd8ac5d1ffa9bdc8 \
-                                    sha256  0a0dac0e4343596f2bfcef27dcf7180524b78bb1d2d2ca878370a7d0f8313d26 \
     }
     
     if {${subport} != ${php}} {
@@ -154,6 +219,10 @@ if {-1 != [lsearch -exact ${sapi_subports} ${subport}]} {
     
     PortGroup               php 1.0
     
+    php.rootname            [regsub "^${php}-" ${subport} ""]
+    
+}
+
 }
 
 ### CLI SAPI ###
@@ -195,13 +264,12 @@ ${phpinidir}/php.ini-production (if this is a production server).
 "
     }
     
-    livecheck.type          regex
-    livecheck.url           ${homepage}downloads.php
-    livecheck.regex         get/php-(5\\.\[0-9.\]+)\\.tar
-}
-
-if {${subport} != ${php}} {
-    livecheck.type          none
+    # Enable livecheck for the two most recent PHP branches.
+    if {${branch} >= [lindex ${branches} end-1]} {
+        livecheck.type      regex
+        livecheck.url       ${homepage}downloads.php
+        livecheck.regex     get/php-([strsed ${branch} {g/\\./\\./}](?:\\.\[0-9.\]+)*)\\.tar
+    }
 }
 
 ### Apache 2 handler SAPI ###
@@ -257,9 +325,15 @@ subport ${php}-cgi {
     configure.args-delete   --disable-cgi
     configure.args-append   --enable-cgi
     
-    build.target            cgi
+    if {${branch} >= 5.4} {
+        build.target        cgi
+        destroot.target     install-cgi
+    } else {
+        destroot {
+            xinstall ${worksrcpath}/sapi/cgi/php-cgi ${destroot}${prefix}/bin/php-cgi[suffix_from_branch ${branch}]
+        }
+    }
     
-    destroot.target         install-cgi
 }
 
 ### FPM SAPI ###
@@ -296,7 +370,7 @@ subport ${php}-fpm {
     }
     
     startupitem.create      yes
-    startupitem.executable  ${prefix}/sbin/php-fpm${suffix}
+    startupitem.executable  ${prefix}/sbin/php-fpm[suffix_from_branch ${branch}]
     
     if {![file exists ${phpinidir}/php-fpm.conf]} {
         notes-append "
@@ -779,12 +853,17 @@ subport ${php}-sockets {
 }
 
 subport ${php}-sqlite {
-    php.extensions          sqlite3 pdo_sqlite
+    php.extensions          sqlite sqlite3 pdo_sqlite
     
     categories-append       databases
     
-    description             a PHP interface to SQLite, including the sqlite3 \
+    description             a PHP interface to SQLite, including the sqlite, sqlite3 \
                             and pdo_sqlite extensions
+    
+    if {${branch} >= 5.4} {
+        php.extensions-delete sqlite
+        description-delete "sqlite,"
+    }
     
     long_description        ${description}
     
@@ -874,8 +953,28 @@ subport ${php}-zip {
     depends_lib-append      port:zlib
 }
 
-if {-1 == [lsearch -exact ${sapi_subports} ${subport}]} {
-    php.rootname [regsub "^${php}-" ${subport} ""]
+}
+
+# These variables are not only required by the subsequent code but also by
+# preceding code in phase blocks.
+set branch              ${subport_branch}
+set php                 php[suffix_from_branch ${branch}]
+
+# Set up the stub port.
+if {${name} == ${subport}} {
+    supported_archs     noarch
+    distfiles
+    depends_run         port:${php}
+    use_configure       no
+    build {}
+    destroot {
+        xinstall -d -m 755 ${destroot}${prefix}/share/doc/${subport}
+        system "echo \"${name} is a stub port\" > ${destroot}${prefix}/share/doc/${subport}/README"
+    }
+}
+
+# Set up the php portgroup, for extension subports.
+if {[is_extension_subport]} {
     if {![info exists php.extensions]} {
         php.extensions ${php.rootname}
     }
