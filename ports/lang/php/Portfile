@@ -267,7 +267,7 @@ ${phpinidir}/php.ini-production (if this is a production server).
     }
     
     # Enable livecheck for the two most recent PHP branches.
-    if {${branch} >= [lindex ${branches} end-1]} {
+    if {[vercmp ${branch} [lindex ${branches} end-1]] >= 0} {
         livecheck.type      regex
         livecheck.url       ${homepage}downloads.php
         livecheck.regex     get/php-([strsed ${branch} {g/\\./\\./}](?:\\.\[0-9.\]+)*)\\.tar
@@ -327,7 +327,7 @@ subport ${php}-cgi {
     configure.args-delete   --disable-cgi
     configure.args-append   --enable-cgi
     
-    if {${branch} >= 5.4} {
+    if {[vercmp ${branch} 5.4] >= 0} {
         build.target        cgi
         destroot.target     install-cgi
     } else {
@@ -862,7 +862,7 @@ subport ${php}-sqlite {
     description             a PHP interface to SQLite, including the sqlite, sqlite3 \
                             and pdo_sqlite extensions
     
-    if {${branch} >= 5.4} {
+    if {[vercmp ${branch} 5.4] >= 0} {
         php.extensions-delete sqlite
         description-delete "sqlite,"
     }
