@@ -195,18 +195,20 @@ if {[is_sapi_subport]} {
                 ui_error "The suhosin variant requires Mac OS X 10.5 or greater."
                 return -code error "incompatible Mac OS X version"
             }
-            if {![tbool ${suhosin_available}]} {
+            if {!${suhosin_available}} {
                 ui_error "There is no suhosin patch for PHP ${version} yet. Please check back later."
             }
             if {![file exists ${extraphpinidir}/suhosin.ini]} {
                 ui_msg "You may also be interested in the suhosin extension, a related but different piece of software. See the ${php}-suhosin port."
             }
-            if {![tbool ${suhosin_available}]} {
+            if {!${suhosin_available}} {
                 return -code error "unavailable variant"
             }
         }
         patch_sites-append          http://download.suhosin.org/
-        patchfiles-append           ${suhosin_patch}
+        if {${suhosin_available}} {
+            patchfiles-append       ${suhosin_patch}
+        }
     }
     
     if {${subport} != ${php}} {
