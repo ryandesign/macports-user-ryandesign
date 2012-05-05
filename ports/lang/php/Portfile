@@ -951,6 +951,7 @@ set php                 php[php.suffix_from_branch ${branch}]
 
 # Set up the stub port.
 if {${name} == ${subport}} {
+    version             ${branch}
     supported_archs     noarch
     distfiles
     depends_run         port:${php}
