@@ -9,7 +9,6 @@ categories              lang php www
 platforms               darwin freebsd
 maintainers             ryandesign jwa
 license                 PHP-3.01
-homepage                http://www.php.net/
 master_sites            php
 use_parallel_build      yes
 use_bzip2               yes
@@ -50,6 +49,10 @@ proc is_extension_subport {} {
         return no
     }
     return [expr {![is_sapi_subport]}]
+}
+
+if {![is_extension_subport]} {
+    homepage            http://www.php.net/
 }
 
 set subport_branch      [php.branch_from_subport]
