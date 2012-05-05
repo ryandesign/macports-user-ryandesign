@@ -2,6 +2,7 @@
 # $Id$
 
 PortSystem              1.0
+PortGroup               php 1.0
 
 name                    php
 categories              lang php www
@@ -21,23 +22,25 @@ long_description        PHP is a widely-used general-purpose scripting \
                         web sites, but can also be used for command-line \
                         scripting.
 
-# The list of PHP branches this port provides, sorted in ascending order.
-set branches            [lsort [list 5.3 5.4]]
+# The list of PHP branches this port provides.
+php.branches            5.3 5.4
 
 # Fix for users specifying the subport name with the wrong case.
 set subport             [string tolower ${subport}]
 
+# Get rootname from subport.
+regexp {^php\d+-(.+)$} ${subport} -> php.rootname
+
 # Returns true if the subport is a SAPI, false otherwise (extension, stub port).
 proc is_sapi_subport {} {
-    global name subport
+    global name subport php.rootname
     if {${name} == ${subport}} {
         return no
     }
     if {[regexp {^php\d+$} ${subport}]} {
         return yes
     }
-    regexp {^php\d+-(.+)$} ${subport} -> rootname
-    return [expr {-1 != [lsearch -exact [list apache2handler cgi fpm] ${rootname}]}]
+    return [expr {-1 != [lsearch -exact [list apache2handler cgi fpm] ${php.rootname}]}]
 }
 
 # Returns true if the subport is an extension, false otherwise (SAPI, stub port).
@@ -49,29 +52,7 @@ proc is_extension_subport {} {
     return [expr {![is_sapi_subport]}]
 }
 
-# Calculate suffix from given branch.
-proc suffix_from_branch {b} {
-    return [strsed ${b} {g/\\.//}]
-}
-
-# Calculate branch from given suffix.
-proc branch_from_suffix {s} {
-    return [string index ${s} 0].[string range ${s} 1 end]
-}
-
-# Calculate branch from subport.
-proc branch_from_subport {} {
-    global branches name subport
-    # For the stub port, use the latest branch.
-    if {${name} == ${subport}} {
-        return [lindex ${branches} end]
-    }
-    # For the subports, get the branch from ${subport}.
-    regexp {^php(\d+)} ${subport} -> suffix
-    return [branch_from_suffix ${suffix}]
-}
-
-set subport_branch      [branch_from_subport]
+set subport_branch      [php.branch_from_subport]
 
 # Remember to increment revision of ${php}-eaccelerator when updating version of ${php}.
 switch ${subport_branch} {
@@ -99,20 +80,18 @@ switch ${subport_branch} {
 
 # Iterate through branches in reverse order, so that the list of subports in
 # "port info" will show newer versions before older versions.
-set i [llength ${branches}]
+set i [llength ${php.branches}]
 while {[incr i -1] >= 0} {
 
-set branch              [lindex ${branches} ${i}]
+set branch              [lindex ${php.branches} ${i}]
 set major               [lindex [split ${branch} .] 0]
-set php                 php[suffix_from_branch ${branch}]
+set php                 php[php.suffix_from_branch ${branch}]
 
 if {[regexp "^${php}" ${subport}]} {
 
 dist_subdir             php${major}
 
 if {[is_sapi_subport]} {
-    
-    ### SAPIs ###
     
     depends_build       port:pkgconfig
     
@@ -143,7 +122,7 @@ if {[is_sapi_subport]} {
     
     configure.args      --mandir=${prefix}/share/man \
                         --infodir=${prefix}/share/info \
-                        --program-suffix=[suffix_from_branch ${branch}] \
+                        --program-suffix=[php.suffix_from_branch ${branch}] \
                         --includedir=${prefix}/include/${php} \
                         --libdir=${prefix}/lib/${php} \
                         --with-config-file-path=${phpinidir} \
@@ -215,14 +194,6 @@ if {[is_sapi_subport]} {
         notes-append "If this is your first install, you need to enable ${subport} in your web server."
     }
     
-} else {
-    
-    ### Bundled extensions ###
-    
-    PortGroup               php 1.0
-    
-    php.rootname            [regsub "^${php}-" ${subport} ""]
-    
 }
 
 }
@@ -267,7 +238,7 @@ ${phpinidir}/php.ini-production (if this is a production server).
     }
     
     # Enable livecheck for the two most recent PHP branches.
-    if {[vercmp ${branch} [lindex ${branches} end-1]] >= 0} {
+    if {[vercmp ${branch} [lindex ${php.branches} end-1]] >= 0} {
         livecheck.type      regex
         livecheck.url       ${homepage}downloads.php
         livecheck.regex     get/php-([strsed ${branch} {g/\\./\\./}](?:\\.\[0-9.\]+)*)\\.tar
@@ -332,7 +303,7 @@ subport ${php}-cgi {
         destroot.target     install-cgi
     } else {
         destroot {
-            xinstall ${worksrcpath}/sapi/cgi/php-cgi ${destroot}${prefix}/bin/php-cgi[suffix_from_branch ${branch}]
+            xinstall ${worksrcpath}/sapi/cgi/php-cgi ${destroot}${prefix}/bin/php-cgi[php.suffix_from_branch ${branch}]
         }
     }
     
@@ -372,7 +343,7 @@ subport ${php}-fpm {
     }
     
     startupitem.create      yes
-    startupitem.executable  ${prefix}/sbin/php-fpm[suffix_from_branch ${branch}]
+    startupitem.executable  ${prefix}/sbin/php-fpm[php.suffix_from_branch ${branch}]
     
     if {![file exists ${phpinidir}/php-fpm.conf]} {
         notes-append "
@@ -960,7 +931,7 @@ subport ${php}-zip {
 # These variables are not only required by the subsequent code but also by
 # preceding code in phase blocks.
 set branch              ${subport_branch}
-set php                 php[suffix_from_branch ${branch}]
+set php                 php[php.suffix_from_branch ${branch}]
 
 # Set up the stub port.
 if {${name} == ${subport}} {
