@@ -201,6 +201,15 @@ if {[is_sapi_subport]} {
 ### CLI SAPI ###
 
 subport ${php} {
+    PortGroup               select 1.0
+    
+    revision                1
+    
+    depends_run             port:php_select
+    
+    select.group            php
+    select.file             ${filespath}/${subport}
+    
     configure.args-delete   --disable-cli
     configure.args-append   --enable-cli
     
