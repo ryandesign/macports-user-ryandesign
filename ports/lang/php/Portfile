@@ -252,6 +252,8 @@ subport ${php}-apache2handler {
     
     long_description        ${description}
     
+    homepage                http://www.php.net/install.unix.apache2
+    
     depends_lib-append      port:apache2
     
     set apxs ${prefix}/apache2/bin/apxs
@@ -295,6 +297,8 @@ subport ${php}-cgi {
     
     long_description        ${description}
     
+    homepage                http://www.php.net/install.unix.commandline
+    
     configure.args-delete   --disable-cgi
     configure.args-append   --enable-cgi
     
@@ -315,6 +319,8 @@ subport ${php}-fpm {
     description             ${php} FPM SAPI
     
     long_description        ${description}
+    
+    homepage                http://www.php.net/install.fpm
     
     set fpmuser             nobody
     set fpmgroup            nobody
