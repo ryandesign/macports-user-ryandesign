@@ -6,7 +6,7 @@
 # come in much faster.
 
 HANDLE=ryandesign
-JOBS=8
+JOBS="$(sysctl -n hw.ncpu)"
 
 TMPFILE="$(mktemp "${TMPDIR:=/tmp}/portmylivecheck.XXXXXXXXXX")"
 
