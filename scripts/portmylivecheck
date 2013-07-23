@@ -8,11 +8,7 @@
 HANDLE=ryandesign
 JOBS=8
 
-if [ -z "$TMPDIR" ]; then
-    TMPDIR=/tmp
-fi
-
-TMPFILE="$(mktemp "$TMPDIR/portmylivecheck.XXXXXXXXXX")"
+TMPFILE="$(mktemp "${TMPDIR:=/tmp}/portmylivecheck.XXXXXXXXXX")"
 
 PORTS=$(port echo '(' \
 'maintainer:(\s|^)'$HANDLE'(\s|$)' or \
