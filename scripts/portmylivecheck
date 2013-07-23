@@ -8,8 +8,6 @@
 HANDLE=ryandesign
 JOBS="$(sysctl -n hw.ncpu)"
 
-TMPFILE="$(mktemp "${TMPDIR:=/tmp}/portmylivecheck.XXXXXXXXXX")"
-
 PORTS=$(port echo '(' \
 'maintainer:(\s|^)'$HANDLE'(\s|$)' or \
 'maintainer:(\s|^)'$HANDLE'@macports.org(\s|$)' or \
@@ -17,16 +15,23 @@ PORTS=$(port echo '(' \
 | sed -E 's/ +//g' \
 | tr '\n' ' ')
 
-echo "all: $PORTS" > "$TMPFILE"
-echo >> "$TMPFILE"
-echo ".PHONY: $PORTS" >> "$TMPFILE"
+MAKEFILE="$(mktemp "${TMPDIR:=/tmp}/portmylivecheck.XXXXXXXXXX")"
+MAKEFILE_FD=3
+
+eval exec "$MAKEFILE_FD>$MAKEFILE"
+
+echo "all: $PORTS" >&$MAKEFILE_FD
+echo >&$MAKEFILE_FD
+echo ".PHONY: $PORTS" >&$MAKEFILE_FD
 
 for PORT in $PORTS; do
-    echo >> "$TMPFILE"
-    echo "$PORT:" >> "$TMPFILE"
-    echo $'\t'"port livecheck $PORT" >> "$TMPFILE"
+    echo >&$MAKEFILE_FD
+    echo "$PORT:" >&$MAKEFILE_FD
+    echo $'\t'"port livecheck $PORT" >&$MAKEFILE_FD
 done
 
-make -f "$TMPFILE" -j $JOBS -s || exit $?
+eval exec "$MAKEFILE_FD>&-"
 
-rm -f "$TMPFILE"
+make -f "$MAKEFILE" -j "$JOBS" -s || exit $?
+
+rm -f "$MAKEFILE"
