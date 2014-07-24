@@ -67,6 +67,16 @@ case "${COMPILER}" in
                 ;;
         esac
         ;;
+    *apple-gcc*)
+        case "${WRAPPER_EXE}" in
+            *++)
+                REAL_EXE="g++-apple-${COMPILER_VERSION}"
+                ;;
+            *)
+                REAL_EXE="gcc-apple-${COMPILER_VERSION}"
+                ;;
+        esac
+        ;;
     *llvm-gcc*)
         case "${WRAPPER_EXE}" in
             *++)
