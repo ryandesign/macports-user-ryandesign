@@ -1,0 +1,85 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id$
+
+PortSystem          1.0
+
+name                macports-compiler-wrappers
+version             0.1
+categories          sysutils
+platforms           darwin
+maintainers         ryandesign openmaintainer
+license             BSD
+supported_archs     noarch
+
+set compilers {
+    apple-gcc-4.0
+    apple-gcc-4.2
+    clang
+    gcc-3.3
+    gcc-4.0
+    gcc-4.2
+    llvm-gcc-4.2
+    macports-clang-2.9
+    macports-clang-3.0
+    macports-clang-3.1
+    macports-clang-3.2
+    macports-clang-3.3
+    macports-clang-3.4
+    macports-clang-3.5
+    macports-gcc-4.2
+    macports-gcc-4.3
+    macports-gcc-4.4
+    macports-gcc-4.5
+    macports-gcc-4.6
+    macports-gcc-4.7
+    macports-gcc-4.8
+    macports-gcc-4.9
+    macports-llvm-gcc-4.2
+}
+
+distfiles
+
+extract.mkdir       yes
+
+post-extract {
+    copy ${filespath}/wrapper.sh ${worksrcpath}
+}
+
+post-patch {
+    reinplace "s|@PREFIX@|${prefix}|g" ${worksrcpath}/wrapper.sh
+}
+
+use_configure       no
+
+build {}
+
+destroot {
+    set wrappers_dir ${prefix}/libexec/macports/compiler-wrappers
+    xinstall -d ${destroot}${wrappers_dir}
+    xinstall ${worksrcpath}/wrapper.sh ${destroot}${wrappers_dir}
+    set no_filter {-}
+    set wrapper {../../wrapper.sh}
+    foreach compiler ${compilers} {
+        set compiler_dir ${wrappers_dir}/${no_filter}/${compiler}
+        xinstall -d ${destroot}${compiler_dir}
+        ln -s ${wrapper} ${destroot}${compiler_dir}/cc
+        ln -s ${wrapper} ${destroot}${compiler_dir}/c++
+        if {[string match *clang* ${compiler}]} {
+            ln -s ${wrapper} ${destroot}${compiler_dir}/clang
+            ln -s ${wrapper} ${destroot}${compiler_dir}/clang++
+        }
+        if {[string match *gcc* ${compiler}]} {
+            ln -s ${wrapper} ${destroot}${compiler_dir}/gcc
+            ln -s ${wrapper} ${destroot}${compiler_dir}/g++
+        }
+        if {[string match *llvm-gcc* ${compiler}]} {
+            ln -s ${wrapper} ${destroot}${compiler_dir}/llvm-gcc
+            ln -s ${wrapper} ${destroot}${compiler_dir}/llvm-g++
+        }
+    }
+    foreach filter {ccache ccache-distcc distcc} {
+        ln -s -- ${no_filter} ${destroot}${wrappers_dir}/${filter}
+    }
+}
+
+livecheck.type      none
