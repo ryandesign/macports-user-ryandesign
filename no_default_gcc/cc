@@ -3,10 +3,10 @@
 
 PROG=$(basename "$0")
 case "$PROG" in
-	gcc)
+	clang|gcc)
 		VAR=cc
 		;;
-	c++|g++)
+	c++|clang++|g++)
 		VAR=cxx
 		;;
 	*)
