@@ -1,10 +1,7 @@
-#!/usr/bin/tclsh
+#!/usr/bin/env port-tclsh
 
 # Runs vercmp with the two version numbers provided to see which is newer.
 
-set prefix /opt/local
-
-source ${prefix}/share/macports/Tcl/macports1.0/macports_fastload.tcl
 package require macports 1.0
 mportinit
 
