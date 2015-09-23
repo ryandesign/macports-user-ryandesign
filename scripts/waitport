@@ -2,13 +2,14 @@
 
 # Waits for MacPorts to finish what it's doing, then exits.
 
-PORT="$(which port 2>&1)"
+PORT_TCLSH="$(which port-tclsh 2>&1)"
+PORT_TCLSH="$(readlink "$PORT_TCLSH" || echo "$PORT_TCLSH")"
 
-if [ ! -x "$PORT" ]; then
-    echo "port command not found" 1>&2
+if [ ! -x "$PORT_TCLSH" ]; then
+    echo "port-tclsh command not found" 1>&2
     exit 1
 fi
 
-while [ -n "$(ps aww | grep "/usr/bin/tclsh $PORT" | grep -v grep)" ]; do
+while [ -n "$(ps aww | grep "$PORT_TCLSH" | grep -v grep)" ]; do
     sleep 1
 done
