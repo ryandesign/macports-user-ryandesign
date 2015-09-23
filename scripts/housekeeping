@@ -14,6 +14,12 @@ if [ ! -d "$PREFIX" ]; then
     exit 1
 fi
 
+
+UI_PREFIX="---> "
+
+
+echo "$UI_PREFIX Deleting old distfiles..."
+
 # Delete distfiles more than 2 years old.
 find "$PREFIX/var/macports/distfiles/" -type f -mtime +730 -print -delete
 
@@ -26,11 +32,17 @@ find "$PREFIX/var/macports/distfiles/" -type d -empty -print -delete
 # Delete incomplete package downloads more than 1 day old.
 find "$PREFIX/var/macports/incoming/" -type f -name '*.TMP' -mtime +1 -print -delete
 
+
+echo "$UI_PREFIX Deleting old logs..."
+
 # Delete logs more than 1 month old.
 find "$PREFIX/var/macports/logs/" -type f -mtime +30 -print -delete
 
 # Delete empty log directories.
 find "$PREFIX/var/macports/logs/" -type d -empty -print -delete
+
+
+echo "$UI_PREFIX Deleting moved files..."
 
 # Delete files moved aside by "sudo port -f activate".
 find "$PREFIX" -path "$PREFIX/var/macports" -prune -o -regex '.*\.mp_[0-9]*$' -print -delete
