@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Removes cache data for versions of Xcode that are no longer installed.
+
+if [ $(id -u) -ne 0 ]; then
+    echo "$(basename "$0") must be run as root" 1>&2
+    exit 1
+fi
+
+UI_PREFIX="---> "
+
+PLISTBUDDY="/usr/libexec/PlistBuddy"
+if [ ! -x "$PLISTBUDDY" ]; then
+  # PlistBuddy is not installed on older systems.
+  # Find newest executable PlistBuddy in installer receipts.
+  for PLISTBUDDY in $(stat -f '%Sm%N' -t '%Y%m%d%H%M%S' /Library/Receipts/*.pkg/Contents/Resources/PlistBuddy | sort -r | sed 's/^..............//'); do
+    if [ -x "$PLISTBUDDY" ]; then
+      break
+    fi
+  done
+  if [ ! -x "$PLISTBUDDY" ]; then
+    echo "Could not find PlistBuddy" 1>&2
+    exit 1
+  fi
+fi
+
+MDFIND="/usr/bin/mdfind"
+if [ ! -x "$MDFIND" ]; then
+  echo "Could not find mdfind" 1>&2
+  exit 1
+fi
+
+
+XCODE_PATHS_INSTALLED=($($MDFIND kMDItemCFBundleIdentifier=com.apple.dt.Xcode))
+XCODE_VERSIONS_INSTALLED=()
+
+for ((I=0; I<${#XCODE_PATHS_INSTALLED[@]}; ++I)); do
+  XCODE_VERSIONS_INSTALLED[$I]="$($PLISTBUDDY -c 'Print CFBundleShortVersionString' -c 'Print ProductBuildVersion' "${XCODE_PATHS_INSTALLED[$I]}/Contents/version.plist" | paste -d - - -)"
+done
+
+XCODE_VERSIONS_WITH_CACHES=($(ls -1d /private/var/folders/*/*/C/com.apple.DeveloperTools/* | sed 's,^.*/,,' | sort -u))
+
+DELETED_K=0
+KEPT_K=0
+for ((C=0; C<${#XCODE_VERSIONS_WITH_CACHES[@]}; ++C)); do
+  SIZE_K="$(du -cks /private/var/folders/*/*/C/com.apple.DeveloperTools/"${XCODE_VERSIONS_WITH_CACHES[$C]}" | tail -n 1 | awk '{print $1}')"
+  SIZE_H="$(echo "scale=1;$SIZE_K/1024" | bc)M"
+  INSTALLED=0
+  for ((I=0; I<${#XCODE_PATHS_INSTALLED[@]}; ++I)); do
+    if [ "${XCODE_VERSIONS_WITH_CACHES[$C]}" == "${XCODE_VERSIONS_INSTALLED[$I]}" ]; then
+      INSTALLED=1
+      echo "$UI_PREFIX Keeping $SIZE_H of caches for Xcode ${XCODE_VERSIONS_INSTALLED[$I]} which is installed at ${XCODE_PATHS_INSTALLED[$I]}"
+      KEPT_K=$(($KEPT_K + $SIZE_K))
+      break
+    fi
+  done
+  if [ $INSTALLED -eq 0 ]; then
+    echo "$UI_PREFIX Deleting $SIZE_H of caches for Xcode ${XCODE_VERSIONS_WITH_CACHES[$C]} which is no longer installed"
+    DELETED_K=$(($DELETED_K + $SIZE_K))
+    rm -rf /private/var/folders/*/*/C/com.apple.DeveloperTools/"${XCODE_VERSIONS_WITH_CACHES[$C]}"
+  fi
+done
+
+if [[ $DELETED_K -gt 0 || $KEPT_K -gt 0 ]]; then
+  echo
+fi
+if [ $DELETED_K -gt 0 ]; then
+  DELETED_H="$(echo "scale=1;$DELETED_K/1024" | bc)M"
+  echo "$UI_PREFIX Deleted a total of $DELETED_H of Xcode caches"
+fi
+if [ $KEPT_K -gt 0 ]; then
+  KEPT_H="$(echo "scale=1;$KEPT_K/1024" | bc)M"
+  echo "$UI_PREFIX Kept a total of $KEPT_H of Xcode caches"
+fi
