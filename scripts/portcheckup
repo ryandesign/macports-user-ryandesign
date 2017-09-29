@@ -5,6 +5,8 @@
 // specified version. Uses the same checksum types the port used before.
 // If the port has subports, it sets all revision lines to 0, otherwise it
 // removes any revision lines. Preserves the port's existing whitespace.
+// Also performs some routine maintenance: Removes $Id$ lines if found, and
+// adds my GitHub username to my MacPorts handle in the maintainers line.
 
 define('MAINTAINER_HANDLE', 'ryandesign');
 define('MAINTAINER_GITHUB', 'ryandesign');
