@@ -63,11 +63,11 @@ function get_port_checksums($port) {
     $new_checksums_text = shell_exec('port -v checksum ' . escapeshellarg($port) . ' 2>/dev/null');
     $algorithms = array('md5', 'sha1', 'rmd160', 'sha256', 'size');
     $algorithms_match = '(' . join('|', $algorithms) . ')';
-    preg_match_all('/(?m)^(?:checksums)?\s+((?:[^ ]+\s+\\\\)?(?:\s+' . $algorithms_match . '\s+[0-9a-f]+\s+\\\\?)+)/', $new_checksums_text, $matches) || error(sprintf(_('couldn\'t find checksums in output of "port -v checksum %s"'), $port));
+    preg_match_all('/(?m)^(?:checksums)?\s+((?:[^ ]+\s+\\\\)?(?:\s+' . $algorithms_match . '\s+[0-9a-f]+\s+\\\\?)+)/', $new_checksums_text, $matches) || error(sprintf(_('couldn\'t find checksums in output of "%s"'), "port -v checksum $port"));
     list(, $file_checksums_texts) = $matches;
     $new_checksums_array = array();
     foreach ($file_checksums_texts as $i => $file_checksums_text) {
-        preg_match_all('/\s' . $algorithms_match . '\s+([0-9a-f]+)/', $file_checksums_text, $matches) || error(sprintf(_('couldn\'t find checksums for distfile %1$d for port %2$s'), 1 + $i, $port));
+        preg_match_all('/\s' . $algorithms_match . '\s+([0-9a-f]+)/', $file_checksums_text, $matches) || error(sprintf(_('couldn\'t find checksums for distfile %1$d of port %2$s'), 1 + $i, $port));
         list(, $file_checksum_algorithms, $file_checksums_array) = $matches;
         foreach ($file_checksum_algorithms as $j => $file_checksum_algorithm) {
             $new_checksums_array[$i][$file_checksum_algorithm] = $file_checksums_array[$j];
