@@ -14,13 +14,17 @@ PROGRESS_CHARS="/-\\|"
 PROGRESS_INDEX=0
 MESSAGE="Waiting for MacPorts to finish what it's doing... "
 
+interrupted() {
+  cleanup
+  exit 2
+}
+
 cleanup() {
     printf "\r%${#MESSAGE}s   \r"
     tput cnorm
-    exit 0
 }
 
-trap cleanup INT
+trap interrupted INT
 tput civis
 while [ -n "$(ps aww | grep "$PORT_TCLSH" | grep -v grep)" ]; do
     printf "\r${MESSAGE}${PROGRESS_CHARS:$PROGRESS_INDEX:1}"
@@ -28,3 +32,4 @@ while [ -n "$(ps aww | grep "$PORT_TCLSH" | grep -v grep)" ]; do
     sleep 1
 done
 cleanup
+exit 0
