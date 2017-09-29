@@ -80,7 +80,7 @@ foreach ($checksums as $i => $file_checksums) {
         $portfile_text = preg_replace('/(\s)' . $algorithm . '(\s+)[0-9a-f]+/', '${1}' . substr($algorithm, 0, 1) . $unique_string . substr($algorithm, 1) . '${2}' . $file_checksum, $portfile_text, 1);
     }
 }
-$portfile_text = str_replace($unique_string, '', $portfile_text);
+$portfile_text = preg_replace(array("/$unique_string/", '/^# \$Id[^$]*\$\n/m'), '', $portfile_text);
 file_put_contents($portfile, $portfile_text);
 
 echo '--->  ' . sprintf(_('Updated version and checksums for %s'), $port) . "\n";
