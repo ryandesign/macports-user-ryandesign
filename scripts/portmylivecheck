@@ -9,9 +9,9 @@ HANDLE=ryandesign
 JOBS="$(sysctl -n hw.ncpu)"
 
 PORTS=$(port echo '(' \
-'maintainer:(\s|^)'$HANDLE'(\s|$)' or \
-'maintainer:(\s|^)'$HANDLE'@macports.org(\s|$)' or \
-'maintainer:(\s|^)macports.org:'$HANDLE'(\s|$)' ')' \
+'maintainer:(\s|{|^)'$HANDLE'(\s|}|$)' or \
+'maintainer:(\s|{|^)'$HANDLE'@macports.org(\s|}|$)' or \
+'maintainer:(\s|{|^)macports.org:'$HANDLE'(\s|}|$)' ')' \
 | sed -E 's/ +//g' \
 | tr '\n' ' ')
 
