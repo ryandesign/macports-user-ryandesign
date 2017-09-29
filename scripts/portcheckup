@@ -84,5 +84,13 @@ $portfile_text = str_replace($unique_string, '', $portfile_text);
 file_put_contents($portfile, $portfile_text);
 
 echo '--->  ' . sprintf(_('Updated version and checksums for %s'), $port) . "\n";
-system('svn di ' . escapeshellarg($portfile));
+exec('git -C ' . escapeshellarg(dirname($portfile)) . ' info >/dev/null 2>/dev/null', $output, $error);
+if (!$error) {
+    system('git -C ' . escapeshellarg(dirname($portfile)) . ' diff ' . escapeshellarg($portfile));
+} else {
+    exec('svn info ' . escapeshellarg($portfile) . ' >/dev/null 2>/dev/null', $output, $error);
+    if (!$error) {
+        system('svn di ' . escapeshellarg($portfile));
+    }
+}
 system('port clean ' . escapeshellarg($port));
