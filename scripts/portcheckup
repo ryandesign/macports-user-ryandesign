@@ -61,7 +61,7 @@ system('port -v fetch ' . escapeshellarg($port));
 function get_port_checksums($port) {
     //$new_checksums_text = shell_exec('sudo port -v checksum ' . escapeshellarg($port));
     $new_checksums_text = shell_exec('port -v checksum ' . escapeshellarg($port) . ' 2>/dev/null');
-    $algorithms = array('md5', 'sha1', 'rmd160', 'sha256');
+    $algorithms = array('md5', 'sha1', 'rmd160', 'sha256', 'size');
     $algorithms_match = '(' . join('|', $algorithms) . ')';
     preg_match_all('/(?m)^(?:checksums)?\s+((?:[^ ]+\s+\\\\)?(?:\s+' . $algorithms_match . '\s+[0-9a-f]+\s+\\\\?)+)/', $new_checksums_text, $matches) || error(sprintf(_('couldn\'t find checksums in output of "port -v checksum %s"'), $port));
     list(, $file_checksums_texts) = $matches;
