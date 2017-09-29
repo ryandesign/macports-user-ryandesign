@@ -3,7 +3,8 @@
 
 // Takes the port's CHECKsums and version and UPdates them to those of the
 // specified version. Uses the same checksum types the port used before.
-// Removes any revision lines. Preserves the port's existing whitespace.
+// If the port has subports, it sets all revision lines to 0, otherwise it
+// removes any revision lines. Preserves the port's existing whitespace.
 
 define('MAINTAINER_HANDLE', 'ryandesign');
 define('MAINTAINER_GITHUB', 'ryandesign');
@@ -38,15 +39,17 @@ list(, $port, $version) = $_SERVER['argv'];
 $portfile = rtrim(shell_exec('port file ' . escapeshellarg($port) . ' 2>/dev/null'));
 empty($portfile) && error(sprintf(_('port %s does not exist'), $port));
 
-$status = rtrim(shell_exec('svn st ' . escapeshellarg($portfile)));
-//empty($status) || error(sprintf(_('port %s has modifications'), $port));
-
-$old_version = rtrim(shell_exec('port info --version --line ' . escapeshellarg($port)));
+$old_version = rtrim(shell_exec('port info --line --version ' . escapeshellarg($port)));
+$has_subports = "" != rtrim(shell_exec('port info --line --subports ' . escapeshellarg($port)));
 
 $portfile_text = file_get_contents($portfile);
 
 $portfile_text = preg_replace('/(?m)^(\s*(?:version\s+|[a-z0-9]+\.setup\s+).*)' . preg_quote($old_version, '/') . '(.*)$/', '${1}' . $version . '${2}', $portfile_text);
-$portfile_text = preg_replace('/(?m)^\s*revision\s+\d+\s*$\n/', '', $portfile_text);
+if ($has_subports) {
+    $portfile_text = preg_replace('/(?m)^(\s*revision\s+)\d+[ \t]*$/', '${1}0', $portfile_text);
+} else {
+    $portfile_text = preg_replace('/(?m)^\s*revision\s+\d+\s*$\n/', '', $portfile_text);
+}
 file_put_contents($portfile, $portfile_text);
 
 // Prevent "Portfile is from the future - check date and time of your system".
