@@ -15,8 +15,8 @@ PROGRESS_INDEX=0
 MESSAGE="Waiting for MacPorts to finish what it's doing... "
 
 interrupted() {
-  cleanup
-  exit 2
+    cleanup
+    exit 2
 }
 
 cleanup() {
