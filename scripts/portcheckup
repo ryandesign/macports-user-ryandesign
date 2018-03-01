@@ -42,7 +42,7 @@ $portfile = rtrim(shell_exec('port file ' . escapeshellarg($port) . ' 2>/dev/nul
 empty($portfile) && error(sprintf(_('port %s does not exist'), $port));
 
 $old_version = rtrim(shell_exec('port info --line --version ' . escapeshellarg($port)));
-$has_subports = "" != rtrim(shell_exec('port info --line --subports ' . escapeshellarg($port)));
+$has_subports = "" != rtrim(shell_exec('port file ' . escapeshellarg($port) . ' | sed -E "s,^.*/([^/]+)/Portfile$,\1," | xargs port info --line --subports'));
 
 $portfile_text = file_get_contents($portfile);
 
