@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Finds distfile directories containing both new (<= 1 year old) and old
+# (> 1 year old) files, sorted by directory size. The old files in these
+# directories are candidates for deletion.
+
+function error {
+    echo $(basename "$0"): $1 >&2
+    exit 1
+}
+
+if [ -z "$DISTFILES" ]; then
+    PORT="$(which port 2>/dev/null)"
+    [ -x "$PORT" ] || error "port command not found in $PATH"
+    PREFIX="${PORT%/bin/port}"
+    DISTFILES="$PREFIX"/var/macports/distfiles
+fi
+
+[ -d "$DISTFILES" ] || error "directory not found: $DISTFILES"
+
+cd "$DISTFILES"
+
+find . -type f -mtime -366d -print \
+    | sed -E -e 's,^\./,,' -e 's,/[^/]+$,,' \
+    | sort -u \
+    | xargs -J % find % -type f -mtime +365d -print \
+    | sed -E 's,/[^/]+$,,' \
+    | sort -u \
+    | xargs du -k \
+    | sort -nr
